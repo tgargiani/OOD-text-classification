@@ -1,0 +1,4 @@
+;In-Scope Accuracy;;;;Out-of-Scope Recall;;;
+pre-trained vectors / datasets;Full;Small;Imbalanced;OOS+;Full;Small;Imbalanced;OOS+
+cc.en.100.vec;89.2;86.1;86.9;89.1;22.2;21.9;25.0;42.4
+cc.en.300.vec;89.8;87.1;87.2;89.5;24.3;23.5;25.6;43.1
