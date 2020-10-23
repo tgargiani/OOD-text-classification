@@ -1,15 +1,17 @@
 from sklearn import svm
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
-import json
+import json, os
 import numpy as np
-
-tfidf = TfidfVectorizer()
-intents_dct = {}
-new_key_value = 0
 
 
 def get_X_y(lst, fit=True):
-    """Splits the 2D list into sentences and intents."""
+    """
+    Splits a part (contained in lst) of dataset into sentences and intents.
+    Subsequently, it (fits and) transforms the sentences into a matrix of TF-IDF features.
+    Returns:
+        X - feature matrix
+        y - np.array of intents encoded using intents_dct as numbers
+    """
 
     global tfidf
     global intents_dct
@@ -36,39 +38,48 @@ def get_X_y(lst, fit=True):
     return X, y
 
 
-# Intent classifier
-path_intents = '/Users/tommaso.gargiani/Documents/FEL/PROJ/datasets/data_full/data_full.json'
+incomplete_path = '/Users/tommaso.gargiani/Documents/FEL/OOD-text-classification/datasets'
 
-with open(path_intents) as f:
-    int_ds = json.load(f)
+for dataset_size in ['data_full', 'data_small', 'data_imbalanced', 'data_oos_plus']:
+    print(f'Testing on: {dataset_size}')
 
-X_train, y_train = get_X_y(int_ds['train'] + int_ds['oos_test'], fit=True)
-X_test, y_test = get_X_y(int_ds['test'] + int_ds['oos_test'], fit=False)
+    tfidf = TfidfVectorizer()
+    intents_dct = {}
+    new_key_value = 0
 
-svc_int = svm.SVC().fit(X_train, y_train)
-# ------------------------------------------
+    # Intent classifier
+    path_intents = os.path.join(incomplete_path, dataset_size, dataset_size + '.json')
 
-# Results
-accuracy_correct = 0
-accuracy_out_of = 0
+    with open(path_intents) as f:
+        int_ds = json.load(f)
 
-recall_correct = 0
-recall_out_of = 0
+    X_train, y_train = get_X_y(int_ds['train'] + int_ds['oos_test'], fit=True)  # fit only on first dataset
+    X_test, y_test = get_X_y(int_ds['test'] + int_ds['oos_test'], fit=False)
 
-for sent_vec, true_int_label in zip(X_test, y_test):
-    pred_int = svc_int.predict(sent_vec)[0]  # intent prediction
+    svc_int = svm.SVC().fit(X_train, y_train)
+    # ------------------------------------------
 
-    if true_int_label != intents_dct['oos']:
-        if pred_int == true_int_label:
-            accuracy_correct += 1
+    # Results
+    accuracy_correct = 0
+    accuracy_out_of = 0
 
-        accuracy_out_of += 1
-    else:
-        if pred_int == true_int_label:  # here pred_int is always oos
-            recall_correct += 1
+    recall_correct = 0
+    recall_out_of = 0
 
-        recall_out_of += 1
+    for sent_vec, true_int_label in zip(X_test, y_test):
+        pred_int = svc_int.predict(sent_vec)[0]  # intent prediction
 
-accuracy = (accuracy_correct / accuracy_out_of) * 100 if accuracy_out_of != 0 else 0
-recall = (recall_correct / recall_out_of) * 100 if recall_out_of != 0 else 0
-print(f'dataset_size: {"binary_undersample"} -- accuracy: {round(accuracy, 1)}, recall: {round(recall, 1)}\n')
+        if true_int_label != intents_dct['oos']:
+            if pred_int == true_int_label:
+                accuracy_correct += 1
+
+            accuracy_out_of += 1
+        else:
+            if pred_int == true_int_label:  # here pred_int is always oos
+                recall_correct += 1
+
+            recall_out_of += 1
+
+    accuracy = (accuracy_correct / accuracy_out_of) * 100 if accuracy_out_of != 0 else 0
+    recall = (recall_correct / recall_out_of) * 100 if recall_out_of != 0 else 0
+    print(f'dataset_size: {dataset_size} -- accuracy: {round(accuracy, 1)}, recall: {round(recall, 1)}\n')

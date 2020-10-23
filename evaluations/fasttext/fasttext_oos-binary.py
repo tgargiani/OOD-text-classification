@@ -1,16 +1,17 @@
 import fasttext, os
 
-incomplete_path = '/Users/tommaso.gargiani/Documents/FEL/PROJ/datasets'
+incomplete_path = '/Users/tommaso.gargiani/Documents/FEL/OOD-text-classification/datasets'
 path_int = os.path.join(incomplete_path, 'data_full', 'fasttext_labels', 'labels.')
 
-# train model for in-scope queries
+# Train model for in-scope queries
+
 # model_int = fasttext.train_supervised(
 #     input=path_int + 'train', dim=100,
-#     pretrainedVectors='/Users/tommaso.gargiani/Documents/FEL/PROJ/pretrained_vectors/cc.en.100.vec')
+#     pretrainedVectors='/Users/tommaso.gargiani/Documents/FEL/OOD-text-classification/pretrained_vectors/cc.en.100.vec')
 
 model_int = fasttext.train_supervised(
     input=path_int + 'train', dim=300,
-    pretrainedVectors='/Users/tommaso.gargiani/Documents/FEL/PROJ/pretrained_vectors/cc.en.300.vec')
+    pretrainedVectors='/Users/tommaso.gargiani/Documents/FEL/OOD-text-classification/pretrained_vectors/cc.en.300.vec')
 
 for dataset_size in ['binary_undersample', 'binary_wiki_aug']:
     print(f'Testing on: {dataset_size}')
@@ -26,14 +27,15 @@ for dataset_size in ['binary_undersample', 'binary_wiki_aug']:
         label, message = line.split(' ', 1)
         test_true.append((label, message))
 
-    # train model for binary classification
+    # Train model for binary classification
+
     # model_bin = fasttext.train_supervised(
     #     input=path_bin + 'train', dim=100,
-    #     pretrainedVectors='/Users/tommaso.gargiani/Documents/FEL/PROJ/pretrained_vectors/cc.en.100.vec')
+    #     pretrainedVectors='/Users/tommaso.gargiani/Documents/FEL/OOD-text-classification/pretrained_vectors/cc.en.100.vec')
 
     model_bin = fasttext.train_supervised(
         input=path_bin + 'train', dim=300,
-        pretrainedVectors='/Users/tommaso.gargiani/Documents/FEL/PROJ/pretrained_vectors/cc.en.300.vec')
+        pretrainedVectors='/Users/tommaso.gargiani/Documents/FEL/OOD-text-classification/pretrained_vectors/cc.en.300.vec')
 
     accuracy_correct = 0
     accuracy_out_of = 0

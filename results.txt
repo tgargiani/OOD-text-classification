@@ -1,33 +1,33 @@
 model = fasttext.train_supervised(
     input=path + 'train_oos_train', lr=1, dim=300, wordNgrams=3, lrUpdateRate=100, ws=3, loss='ns',
-    pretrainedVectors='/Users/tommaso.gargiani/Documents/FEL/PROJ/pretrained_vectors/wiki-news-300d-1M.vec')
+    pretrainedVectors='/Users/tommaso.gargiani/Documents/FEL/OOD-text-classification/pretrained_vectors/wiki-news-300d-1M.vec')
 
 accuracy: 89.95555555555555
 recall: 16.3
 -----------------------------------------------------------------
 model = fasttext.train_supervised(
     input=path + 'train_oos_train', lr=1, dim=300, wordNgrams=3, lrUpdateRate=100, ws=3, loss='ns',
-    pretrainedVectors='/Users/tommaso.gargiani/Documents/FEL/PROJ/pretrained_vectors/crawl-300d-2M.vec')
+    pretrainedVectors='/Users/tommaso.gargiani/Documents/FEL/OOD-text-classification/pretrained_vectors/crawl-300d-2M.vec')
 
 accuracy: 91.46666666666667
 recall: 19.400000000000002
 -----------------------------------------------------------------
 model = fasttext.train_supervised(
     input=path + 'train_oos_train', lr=1, dim=300, wordNgrams=3, lrUpdateRate=100, ws=3, loss='ns',
-    pretrainedVectors='/Users/tommaso.gargiani/Documents/FEL/PROJ/pretrained_vectors/cc.en.300.vec')
+    pretrainedVectors='/Users/tommaso.gargiani/Documents/FEL/OOD-text-classification/pretrained_vectors/cc.en.300.vec')
 
 accuracy: 89.91111111111111
 recall: 12.8
 -----------------------------------------------------------------
 model = fasttext.train_supervised(
     input=path + 'train_oos_train', lr=1, dim=100, wordNgrams=3, lrUpdateRate=100, ws=3, loss='ns',
-    pretrainedVectors='/Users/tommaso.gargiani/Documents/FEL/PROJ/pretrained_vectors/cc.en.100.vec')
+    pretrainedVectors='/Users/tommaso.gargiani/Documents/FEL/OOD-text-classification/pretrained_vectors/cc.en.100.vec')
 
 accuracy: 89.24444444444445
 recall: 14.799999999999999
 -----------------------------------------------------------------
 model = fasttext.train_supervised(
-    input=path + 'train_oos_train', pretrainedVectors='/Users/tommaso.gargiani/Documents/FEL/PROJ/pretrained_vectors/cc.en.100.vec')
+    input=path + 'train_oos_train', pretrainedVectors='/Users/tommaso.gargiani/Documents/FEL/OOD-text-classification/pretrained_vectors/cc.en.100.vec')
 
 accuracy: 89.44444444444444
 recall: 21.9
@@ -38,7 +38,7 @@ recall: 21.9
 RESULTS WITH:
 model = fasttext.train_supervised(
     input=path + 'train_oos_train', lr=1, dim=100, wordNgrams=3, lrUpdateRate=100, ws=3, loss='ns',
-    pretrainedVectors='/Users/tommaso.gargiani/Documents/FEL/PROJ/pretrained_vectors/cc.en.100.vec')
+    pretrainedVectors='/Users/tommaso.gargiani/Documents/FEL/OOD-text-classification/pretrained_vectors/cc.en.100.vec')
 
 Testing on: data_full
 dataset_size: data_full -- accuracy: 89.2, recall: 14.3
@@ -55,7 +55,7 @@ dataset_size: data_oos_plus -- accuracy: 89.7, recall: 31.3
 RESULTS WITH:
 model = fasttext.train_supervised(
         input=path + 'train_oos_train', dim=300,
-        pretrainedVectors='/Users/tommaso.gargiani/Documents/FEL/PROJ/pretrained_vectors/cc.en.300.vec')
+        pretrainedVectors='/Users/tommaso.gargiani/Documents/FEL/OOD-text-classification/pretrained_vectors/cc.en.300.vec')
 
 Testing on: data_full
 dataset_size: data_full -- accuracy: 89.8, recall: 22.5

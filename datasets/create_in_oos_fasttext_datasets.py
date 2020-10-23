@@ -19,6 +19,6 @@ def create_in_oos_fasttext_datasets(path):
         var.close()
 
 # create_in_oos_fasttext_datasets(
-#     '/Users/tommaso.gargiani/Documents/FEL/PROJ/datasets/binary_undersample/binary_undersample.json')
+#     '/Users/tommaso.gargiani/Documents/FEL/OOD-text-classification/datasets/binary_undersample/binary_undersample.json')
 # create_in_oos_fasttext_datasets(
-#     '/Users/tommaso.gargiani/Documents/FEL/PROJ/datasets/binary_wiki_aug/binary_wiki_aug.json')
+#     '/Users/tommaso.gargiani/Documents/FEL/OOD-text-classification/datasets/binary_wiki_aug/binary_wiki_aug.json')

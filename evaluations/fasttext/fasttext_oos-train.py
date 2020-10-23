@@ -1,6 +1,6 @@
 import fasttext, os
 
-incomplete_path = '/Users/tommaso.gargiani/Documents/FEL/PROJ/datasets'
+incomplete_path = '/Users/tommaso.gargiani/Documents/FEL/OOD-text-classification/datasets'
 
 for dataset_size in ['data_full', 'data_small', 'data_imbalanced', 'data_oos_plus']:
     print(f'Testing on: {dataset_size}')
@@ -15,13 +15,15 @@ for dataset_size in ['data_full', 'data_small', 'data_imbalanced', 'data_oos_plu
         label, message = line.split(' ', 1)
         test_true.append((label, message))
 
+    # Train model for in-scope queries
+
     # model = fasttext.train_supervised(
     #     input=path + 'train_oos_train', dim=100,
-    #     pretrainedVectors='/Users/tommaso.gargiani/Documents/FEL/PROJ/pretrained_vectors/cc.en.100.vec')
+    #     pretrainedVectors='/Users/tommaso.gargiani/Documents/FEL/OOD-text-classification/pretrained_vectors/cc.en.100.vec')
 
     model = fasttext.train_supervised(
         input=path + 'train_oos_train', dim=300,
-        pretrainedVectors='/Users/tommaso.gargiani/Documents/FEL/PROJ/pretrained_vectors/cc.en.300.vec')
+        pretrainedVectors='/Users/tommaso.gargiani/Documents/FEL/OOD-text-classification/pretrained_vectors/cc.en.300.vec')
 
     accuracy_correct = 0
     accuracy_out_of = 0

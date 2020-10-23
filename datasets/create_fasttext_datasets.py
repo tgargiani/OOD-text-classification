@@ -32,7 +32,7 @@ def create_fasttext_datasets(path):
 
             var.close()
 
-# create_fasttext_datasets('/Users/tommaso.gargiani/Documents/FEL/PROJ/datasets/data_full/data_full.json')
-# create_fasttext_datasets('/Users/tommaso.gargiani/Documents/FEL/PROJ/datasets/data_imbalanced/data_imbalanced.json')
-# create_fasttext_datasets('/Users/tommaso.gargiani/Documents/FEL/PROJ/datasets/data_oos_plus/data_oos_plus.json')
-# create_fasttext_datasets('/Users/tommaso.gargiani/Documents/FEL/PROJ/datasets/data_small/data_small.json')
+# create_fasttext_datasets('/Users/tommaso.gargiani/Documents/FEL/OOD-text-classification/datasets/data_full/data_full.json')
+# create_fasttext_datasets('/Users/tommaso.gargiani/Documents/FEL/OOD-text-classification/datasets/data_imbalanced/data_imbalanced.json')
+# create_fasttext_datasets('/Users/tommaso.gargiani/Documents/FEL/OOD-text-classification/datasets/data_oos_plus/data_oos_plus.json')
+# create_fasttext_datasets('/Users/tommaso.gargiani/Documents/FEL/OOD-text-classification/datasets/data_small/data_small.json')

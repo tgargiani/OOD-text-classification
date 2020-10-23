@@ -1,14 +1,13 @@
 import fasttext, os
 import numpy as np
 
-incomplete_path = '/Users/tommaso.gargiani/Documents/FEL/PROJ/datasets'
+incomplete_path = '/Users/tommaso.gargiani/Documents/FEL/OOD-text-classification/datasets'
 
 for dataset_size in ['data_full', 'data_small', 'data_imbalanced']:
     print(f'Testing on: {dataset_size}')
 
     path = os.path.join(incomplete_path, dataset_size, 'fasttext_labels', 'labels.')
     val_true = []  # used to find the validation threshold
-    thresholds = np.linspace(0, 1, 101)
 
     with open(path + 'val_oos_val', 'r') as f:
         raw = f.read()
@@ -26,21 +25,24 @@ for dataset_size in ['data_full', 'data_small', 'data_imbalanced']:
         label, message = line.split(' ', 1)
         test_true.append((label, message))
 
+    # Train model for in-scope queries
+
     # model = fasttext.train_supervised(
     #     input=path + 'train', dim=100,
-    #     pretrainedVectors='/Users/tommaso.gargiani/Documents/FEL/PROJ/pretrained_vectors/cc.en.100.vec')
+    #     pretrainedVectors='/Users/tommaso.gargiani/Documents/FEL/OOD-text-classification/pretrained_vectors/cc.en.100.vec')
 
     model = fasttext.train_supervised(
         input=path + 'train', dim=300,
-        pretrainedVectors='/Users/tommaso.gargiani/Documents/FEL/PROJ/pretrained_vectors/cc.en.300.vec')
+        pretrainedVectors='/Users/tommaso.gargiani/Documents/FEL/OOD-text-classification/pretrained_vectors/cc.en.300.vec')
 
-    val_predictions_labels = []
+    val_predictions_labels = []  # used to find threshold
 
     for label, message in val_true:
         pred = model.predict(message)
-        val_predictions_labels.append( (pred, label) )
+        val_predictions_labels.append((pred, label))
 
     # Initialize search for best threshold
+    thresholds = np.linspace(0, 1, 101)  # all possible thresholds
     previous_val_accuracy = 0
     threshold = 0
 
@@ -64,7 +66,7 @@ for dataset_size in ['data_full', 'data_small', 'data_imbalanced']:
         val_accuracy = (val_accuracy_correct / val_accuracy_out_of) * 100
 
         if val_accuracy < previous_val_accuracy:
-            threshold = thresholds[idx - 1] # best threshold is the previous one
+            threshold = thresholds[idx - 1]  # best threshold is the previous one
             break
 
         previous_val_accuracy = val_accuracy
