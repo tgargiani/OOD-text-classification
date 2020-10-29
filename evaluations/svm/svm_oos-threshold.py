@@ -1,5 +1,5 @@
 from sklearn import svm
-from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer
 import json, os
 import numpy as np
 
@@ -56,17 +56,16 @@ for dataset_size in ['data_full', 'data_small', 'data_imbalanced']:
     X_train, y_train = get_X_y(int_ds['train'], fit=True)  # fit only on first dataset
     X_val, y_val = get_X_y(int_ds['val'] + int_ds['oos_val'], fit=False)
     X_test, y_test = get_X_y(int_ds['test'] + int_ds['oos_test'], fit=False)
-
     svc_int = svm.SVC(probability=True).fit(X_train, y_train)
 
     val_predictions_labels = []  # used to find threshold
 
     for sent_vec, true_int_label in zip(X_val, y_val):
         pred_probabilities = svc_int.predict_proba(sent_vec)[0]  # intent prediction probabilities
-        pred_int = np.argmax(pred_probabilities)  # intent prediction
-        pred_prob = pred_probabilities[pred_int]
+        pred_label = np.argmax(pred_probabilities)  # intent prediction
+        similarity = pred_probabilities[pred_label]
 
-        pred = (pred_int, pred_prob)
+        pred = (pred_label, similarity)
         val_predictions_labels.append((pred, true_int_label))
 
     # Initialize search for best threshold
@@ -110,15 +109,20 @@ for dataset_size in ['data_full', 'data_small', 'data_imbalanced']:
     recall_out_of = 0
 
     for sent_vec, true_int_label in zip(X_test, y_test):
-        pred_int = svc_int.predict(sent_vec)[0]  # intent prediction
+        pred_probabilities = svc_int.predict_proba(sent_vec)[0]  # intent prediction probabilities
+        pred_label = np.argmax(pred_probabilities)  # intent prediction
+        similarity = pred_probabilities[pred_label]
+
+        if similarity < threshold:
+            pred_label = 'oos'
 
         if true_int_label != intents_dct['oos']:
-            if pred_int == true_int_label:
+            if pred_label == true_int_label:
                 accuracy_correct += 1
 
             accuracy_out_of += 1
         else:
-            if pred_int == true_int_label:  # here pred_int is always oos
+            if pred_label == true_int_label:  # here pred_label is always oos
                 recall_correct += 1
 
             recall_out_of += 1
