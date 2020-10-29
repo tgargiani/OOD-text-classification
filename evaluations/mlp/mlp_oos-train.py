@@ -1,4 +1,4 @@
-from sklearn import svm
+from sklearn.neural_network import MLPClassifier
 from sklearn.feature_extraction.text import TfidfVectorizer
 import json, os
 import numpy as np
@@ -20,13 +20,13 @@ def get_X_y(lst, fit=True):
     sentences = []
     intents = []
 
-    for sent, inte in lst:
-        if inte not in intents_dct.keys():
-            intents_dct[inte] = new_key_value
+    for sent, label in lst:
+        if label not in intents_dct.keys():
+            intents_dct[label] = new_key_value
             new_key_value += 1
 
         sentences.append(sent)
-        intents.append(intents_dct[inte])
+        intents.append(intents_dct[label])
 
     if fit:
         X = tfidf.fit_transform(sentences)
@@ -40,35 +40,23 @@ def get_X_y(lst, fit=True):
 
 incomplete_path = '/Users/tommaso.gargiani/Documents/FEL/OOD-text-classification/datasets'
 
-tfidf = TfidfVectorizer()
-intents_dct = {}
-new_key_value = 0
-
-# Intent classifier
-path_intents = os.path.join(incomplete_path, 'data_full', 'data_full.json')  # always use data_full dataset
-
-with open(path_intents) as f:
-    int_ds = json.load(f)
-
-X_int_train, y_int_train = get_X_y(int_ds['train'], fit=True)  # fit only on first dataset
-X_int_test, y_int_test = get_X_y(int_ds['test'] + int_ds['oos_test'], fit=False)
-
-svc_int = svm.SVC().fit(X_int_train, y_int_train)
-# ------------------------------------------
-
-for dataset_size in ['binary_undersample', 'binary_wiki_aug']:
+for dataset_size in ['data_full', 'data_small', 'data_imbalanced', 'data_oos_plus']:
     print(f'Testing on: {dataset_size}')
 
-    # Binary classifier
-    path_bin = os.path.join(incomplete_path, dataset_size, dataset_size + '.json')
+    tfidf = TfidfVectorizer()
+    intents_dct = {}
+    new_key_value = 0
 
-    with open(path_bin) as f:
-        bin_ds = json.load(f)
+    # Intent classifier
+    path_intents = os.path.join(incomplete_path, dataset_size, dataset_size + '.json')
 
-    X_bin_train, y_bin_train = get_X_y(bin_ds['train'], fit=False)
-    X_bin_test, y_bin_test = get_X_y(bin_ds['test'], fit=False)
+    with open(path_intents) as f:
+        int_ds = json.load(f)
 
-    svc_bin = svm.SVC().fit(X_bin_train, y_bin_train)
+    X_train, y_train = get_X_y(int_ds['train'] + int_ds['oos_test'], fit=True)  # fit only on first dataset
+    X_test, y_test = get_X_y(int_ds['test'] + int_ds['oos_test'], fit=False)
+
+    mlp_int = MLPClassifier().fit(X_train, y_train)
     # ------------------------------------------
 
     # Results
@@ -78,18 +66,16 @@ for dataset_size in ['binary_undersample', 'binary_wiki_aug']:
     recall_correct = 0
     recall_out_of = 0
 
-    for sent_vec, true_int_label in zip(X_int_test, y_int_test):
-        pred_bin = svc_bin.predict(sent_vec)[0]  # binary prediction
+    for sent_vec, true_int_label in zip(X_test, y_test):
+        pred_int = mlp_int.predict(sent_vec)[0]  # intent prediction
 
-        if pred_bin == intents_dct['in']:
-            pred_int = svc_int.predict(sent_vec)[0]  # intent prediction
-
+        if true_int_label != intents_dct['oos']:
             if pred_int == true_int_label:
                 accuracy_correct += 1
 
             accuracy_out_of += 1
         else:
-            if pred_bin == true_int_label:  # here pred_bin is always oos
+            if pred_int == true_int_label:  # here pred_int is always oos
                 recall_correct += 1
 
             recall_out_of += 1

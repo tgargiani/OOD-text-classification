@@ -1,4 +1,4 @@
-from sklearn import svm
+from sklearn.neural_network import MLPClassifier
 from sklearn.feature_extraction.text import TfidfVectorizer
 import json, os
 import numpy as np
@@ -53,7 +53,7 @@ with open(path_intents) as f:
 X_int_train, y_int_train = get_X_y(int_ds['train'], fit=True)  # fit only on first dataset
 X_int_test, y_int_test = get_X_y(int_ds['test'] + int_ds['oos_test'], fit=False)
 
-svc_int = svm.SVC().fit(X_int_train, y_int_train)
+mlp_int = MLPClassifier().fit(X_int_train, y_int_train)
 # ------------------------------------------
 
 for dataset_size in ['binary_undersample', 'binary_wiki_aug']:
@@ -68,7 +68,7 @@ for dataset_size in ['binary_undersample', 'binary_wiki_aug']:
     X_bin_train, y_bin_train = get_X_y(bin_ds['train'], fit=False)
     X_bin_test, y_bin_test = get_X_y(bin_ds['test'], fit=False)
 
-    svc_bin = svm.SVC().fit(X_bin_train, y_bin_train)
+    mlp_bin = MLPClassifier().fit(X_bin_train, y_bin_train)
     # ------------------------------------------
 
     # Results
@@ -79,10 +79,10 @@ for dataset_size in ['binary_undersample', 'binary_wiki_aug']:
     recall_out_of = 0
 
     for sent_vec, true_int_label in zip(X_int_test, y_int_test):
-        pred_bin = svc_bin.predict(sent_vec)[0]  # binary prediction
+        pred_bin = mlp_bin.predict(sent_vec)[0]  # binary prediction
 
         if pred_bin == intents_dct['in']:
-            pred_int = svc_int.predict(sent_vec)[0]  # intent prediction
+            pred_int = mlp_int.predict(sent_vec)[0]  # intent prediction
 
             if pred_int == true_int_label:
                 accuracy_correct += 1

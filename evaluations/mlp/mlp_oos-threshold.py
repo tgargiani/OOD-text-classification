@@ -1,4 +1,4 @@
-from sklearn import svm
+from sklearn.neural_network import MLPClassifier
 from sklearn.feature_extraction.text import TfidfVectorizer
 import json, os
 import numpy as np
@@ -40,7 +40,7 @@ def get_X_y(lst, fit=True):
 
 incomplete_path = '/Users/tommaso.gargiani/Documents/FEL/OOD-text-classification/datasets'
 
-for dataset_size in ['data_full', 'data_small', 'data_imbalanced', 'data_oos_plus']:
+for dataset_size in ['data_full', 'data_small', 'data_imbalanced']:
     print(f'Testing on: {dataset_size}')
 
     tfidf = TfidfVectorizer()
@@ -53,10 +53,53 @@ for dataset_size in ['data_full', 'data_small', 'data_imbalanced', 'data_oos_plu
     with open(path_intents) as f:
         int_ds = json.load(f)
 
-    X_train, y_train = get_X_y(int_ds['train'] + int_ds['oos_test'], fit=True)  # fit only on first dataset
+    X_train, y_train = get_X_y(int_ds['train'], fit=True)  # fit only on first dataset
+    X_val, y_val = get_X_y(int_ds['val'] + int_ds['oos_val'], fit=False)
     X_test, y_test = get_X_y(int_ds['test'] + int_ds['oos_test'], fit=False)
 
-    svc_int = svm.SVC().fit(X_train, y_train)
+    mlp_int = MLPClassifier().fit(X_train, y_train)
+
+    val_predictions_labels = []  # used to find threshold
+
+    for sent_vec, true_int_label in zip(X_val, y_val):
+        pred_probs = mlp_int.predict_proba(sent_vec)[0]  # intent prediction probabilities
+        pred_label = np.argmax(pred_probs)  # intent prediction
+        similarity = pred_probs[pred_label]
+
+        pred = (pred_label, similarity)
+        val_predictions_labels.append((pred, true_int_label))
+
+    # Initialize search for best threshold
+    thresholds = np.linspace(0, 1, 101)
+    previous_val_accuracy = 0
+    threshold = 0
+
+    # Find best threshold
+    for idx, tr in enumerate(thresholds):
+        val_accuracy_correct = 0
+        val_accuracy_out_of = 0
+
+        for pred, label in val_predictions_labels:
+            pred_label = pred[0]
+            similarity = pred[1]
+
+            if similarity < tr:
+                pred_label = intents_dct['oos']
+
+            if pred_label == label:
+                val_accuracy_correct += 1
+
+            val_accuracy_out_of += 1
+
+        val_accuracy = (val_accuracy_correct / val_accuracy_out_of) * 100
+
+        if val_accuracy < previous_val_accuracy:
+            threshold = thresholds[idx - 1]  # best threshold is the previous one
+            break
+
+        previous_val_accuracy = val_accuracy
+        threshold = tr
+
     # ------------------------------------------
 
     # Results
@@ -67,15 +110,20 @@ for dataset_size in ['data_full', 'data_small', 'data_imbalanced', 'data_oos_plu
     recall_out_of = 0
 
     for sent_vec, true_int_label in zip(X_test, y_test):
-        pred_int = svc_int.predict(sent_vec)[0]  # intent prediction
+        pred_probs = mlp_int.predict_proba(sent_vec)[0]  # intent prediction probabilities
+        pred_label = np.argmax(pred_probs)  # intent prediction
+        similarity = pred_probs[pred_label]
+
+        if similarity < threshold:
+            pred_label = intents_dct['oos']
 
         if true_int_label != intents_dct['oos']:
-            if pred_int == true_int_label:
+            if pred_label == true_int_label:
                 accuracy_correct += 1
 
             accuracy_out_of += 1
         else:
-            if pred_int == true_int_label:  # here pred_int is always oos
+            if pred_label == true_int_label:  # here pred_label is always oos
                 recall_correct += 1
 
             recall_out_of += 1
