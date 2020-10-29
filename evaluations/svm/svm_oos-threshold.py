@@ -56,14 +56,15 @@ for dataset_size in ['data_full', 'data_small', 'data_imbalanced']:
     X_train, y_train = get_X_y(int_ds['train'], fit=True)  # fit only on first dataset
     X_val, y_val = get_X_y(int_ds['val'] + int_ds['oos_val'], fit=False)
     X_test, y_test = get_X_y(int_ds['test'] + int_ds['oos_test'], fit=False)
+
     svc_int = svm.SVC(probability=True).fit(X_train, y_train)
 
     val_predictions_labels = []  # used to find threshold
 
     for sent_vec, true_int_label in zip(X_val, y_val):
-        pred_probabilities = svc_int.predict_proba(sent_vec)[0]  # intent prediction probabilities
-        pred_label = np.argmax(pred_probabilities)  # intent prediction
-        similarity = pred_probabilities[pred_label]
+        pred_probs = svc_int.predict_proba(sent_vec)[0]  # intent prediction probabilities
+        pred_label = np.argmax(pred_probs)  # intent prediction
+        similarity = pred_probs[pred_label]
 
         pred = (pred_label, similarity)
         val_predictions_labels.append((pred, true_int_label))
@@ -83,7 +84,7 @@ for dataset_size in ['data_full', 'data_small', 'data_imbalanced']:
             similarity = pred[1]
 
             if similarity < tr:
-                pred_label = 'oos'
+                pred_label = intents_dct['oos']
 
             if pred_label == label:
                 val_accuracy_correct += 1
@@ -109,12 +110,12 @@ for dataset_size in ['data_full', 'data_small', 'data_imbalanced']:
     recall_out_of = 0
 
     for sent_vec, true_int_label in zip(X_test, y_test):
-        pred_probabilities = svc_int.predict_proba(sent_vec)[0]  # intent prediction probabilities
-        pred_label = np.argmax(pred_probabilities)  # intent prediction
-        similarity = pred_probabilities[pred_label]
+        pred_probs = svc_int.predict_proba(sent_vec)[0]  # intent prediction probabilities
+        pred_label = np.argmax(pred_probs)  # intent prediction
+        similarity = pred_probs[pred_label]
 
         if similarity < threshold:
-            pred_label = 'oos'
+            pred_label = intents_dct['oos']
 
         if true_int_label != intents_dct['oos']:
             if pred_label == true_int_label:
