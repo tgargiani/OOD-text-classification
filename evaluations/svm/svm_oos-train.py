@@ -16,7 +16,7 @@ for dataset_size in ['data_full', 'data_small', 'data_imbalanced', 'data_oos_plu
     with open(path_intents) as f:
         int_ds = json.load(f)
 
-    X_train, y_train = utils.get_X_y(int_ds['train'] + int_ds['oos_test'], fit=True)  # fit only on first dataset
+    X_train, y_train = utils.get_X_y(int_ds['train'] + int_ds['oos_train'], fit=True)  # fit only on first dataset
     X_test, y_test = utils.get_X_y(int_ds['test'] + int_ds['oos_test'], fit=False)
 
     svc_int = svm.SVC().fit(X_train, y_train)
