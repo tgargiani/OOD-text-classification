@@ -36,5 +36,10 @@ for dataset_size in ['binary_undersample', 'binary_wiki_aug']:
 
     # Test
     testing = Testing(svc_int, X_int_test, y_int_test, 'svm', utils.intents_dct['oos'], bin_model=svc_bin)
-    accuracy, recall = testing.test_binary()
-    print(f'dataset_size: {dataset_size} -- accuracy: {round(accuracy, 1)}, recall: {round(recall, 1)}\n')
+    results_dct = testing.test_binary()
+    print(
+        f'dataset_size: {dataset_size} -- '
+        f'accuracy: {round(results_dct["accuracy"], 1)}, '
+        f'recall: {round(results_dct["recall"], 1)}, '
+        f'far: {round(results_dct["far"], 1)}, '
+        f'frr: {round(results_dct["frr"], 1)}\n')

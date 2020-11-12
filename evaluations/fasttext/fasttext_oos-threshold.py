@@ -73,5 +73,10 @@ for dataset_size in ['data_full', 'data_small', 'data_imbalanced']:
 
     # Test
     testing = Testing(model, X_test, y_test, 'fasttext', '__label__oos')
-    accuracy, recall = testing.test_threshold(threshold)
-    print(f'dataset_size: {dataset_size} -- accuracy: {round(accuracy, 1)}, recall: {round(recall, 1)}\n')
+    results_dct = testing.test_threshold(threshold)
+    print(
+        f'dataset_size: {dataset_size} -- '
+        f'accuracy: {round(results_dct["accuracy"], 1)}, '
+        f'recall: {round(results_dct["recall"], 1)}, '
+        f'far: {round(results_dct["far"], 1)}, '
+        f'frr: {round(results_dct["frr"], 1)}\n')
