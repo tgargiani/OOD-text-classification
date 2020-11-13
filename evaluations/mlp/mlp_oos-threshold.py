@@ -21,7 +21,7 @@ for dataset_size in ['data_full', 'data_small', 'data_imbalanced']:
     X_val, y_val = utils.get_X_y(int_ds['val'] + int_ds['oos_val'], fit=False)
     X_test, y_test = utils.get_X_y(int_ds['test'] + int_ds['oos_test'], fit=False)
 
-    mlp_int = MLPClassifier().fit(X_train, y_train)
+    mlp_int = MLPClassifier(activation='tanh').fit(X_train, y_train)
 
     val_predictions_labels = []  # used to find threshold
 

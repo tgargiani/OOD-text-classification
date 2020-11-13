@@ -36,3 +36,15 @@ class Utils:
         y = np.asarray(intents)
 
         return X, y
+
+    def get_intents_selection(self, lst, num_samples):
+        unique_intents = list(set([l[1] for l in lst]))
+        selection = np.random.choice(unique_intents, num_samples,
+                                     replace=False)  # replace=False doesn't allow elements to repeat
+
+        return selection
+
+    def get_filtered_lst(self, lst, selection):
+        filtered_lst = [l for l in lst if l[1] in selection]
+
+        return filtered_lst

@@ -16,7 +16,7 @@ utils = Utils()
 X_int_train, y_int_train = utils.get_X_y(int_ds['train'], fit=True)  # fit only on first dataset
 X_int_test, y_int_test = utils.get_X_y(int_ds['test'] + int_ds['oos_test'], fit=False)
 
-mlp_int = MLPClassifier().fit(X_int_train, y_int_train)
+mlp_int = MLPClassifier(activation='tanh').fit(X_int_train, y_int_train)
 # ------------------------------------------
 
 for dataset_size in ['binary_undersample', 'binary_wiki_aug']:
@@ -31,7 +31,7 @@ for dataset_size in ['binary_undersample', 'binary_wiki_aug']:
     X_bin_train, y_bin_train = utils.get_X_y(bin_ds['train'], fit=False)
     # X_bin_test, y_bin_test = utils.get_X_y(bin_ds['test'], fit=False)
 
-    mlp_bin = MLPClassifier().fit(X_bin_train, y_bin_train)
+    mlp_bin = MLPClassifier(activation='tanh').fit(X_bin_train, y_bin_train)
     # ------------------------------------------
 
     # Test

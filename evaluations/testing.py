@@ -112,8 +112,8 @@ class Testing:
 
                 recall_out_of += 1
 
-        accuracy = (accuracy_correct / accuracy_out_of) * 100
-        recall = (recall_correct / recall_out_of) * 100
+        accuracy = accuracy_correct / accuracy_out_of * 100
+        recall = recall_correct / recall_out_of * 100
 
         far = fn / (tp + fn) * 100  # false acceptance rate
         frr = fp / (fp + tn) * 100  # false recognition rate
@@ -129,7 +129,6 @@ class Testing:
         for message, true_label in zip(self.X_test, self.y_test):
             # 1st step - binary classification
             bin_pred = self.bin_model.predict(message)
-            print(bin_pred)
 
             # unify different outputs of various model.predict() functions
             if self.model_type == 'fasttext':
@@ -170,8 +169,8 @@ class Testing:
 
                 recall_out_of += 1
 
-        accuracy = (accuracy_correct / accuracy_out_of) * 100 if accuracy_out_of != 0 else 0
-        recall = (recall_correct / recall_out_of) * 100 if recall_out_of != 0 else 0
+        accuracy = accuracy_correct / accuracy_out_of * 100
+        recall = recall_correct / recall_out_of * 100
 
         far = fn / (tp + fn) * 100  # false acceptance rate
         frr = fp / (fp + tn) * 100  # false recognition rate
