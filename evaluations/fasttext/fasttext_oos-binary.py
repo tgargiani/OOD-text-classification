@@ -1,8 +1,8 @@
 import fasttext, os
 from testing import Testing
+from utils import DS_INCOMPLETE_PATH
 
-incomplete_path = '/Users/tommaso.gargiani/Documents/FEL/OOD-text-classification/datasets'
-path_int = os.path.join(incomplete_path, 'data_full', 'fasttext_labels', 'labels.')
+path_int = os.path.join(DS_INCOMPLETE_PATH, 'data_full', 'fasttext_labels', 'labels.')
 DIM = 100  # dimension of pretrained vectors - either 100 or 300
 
 # Train model for in-scope queries
@@ -13,7 +13,7 @@ model_int = fasttext.train_supervised(
 for dataset_size in ['binary_undersample', 'binary_wiki_aug']:
     print(f'Testing on: {dataset_size}')
 
-    path_bin = os.path.join(incomplete_path, dataset_size, 'fasttext_labels', 'labels.')
+    path_bin = os.path.join(DS_INCOMPLETE_PATH, dataset_size, 'fasttext_labels', 'labels.')
 
     X_test = []  # used to check correctness of results
     y_test = []

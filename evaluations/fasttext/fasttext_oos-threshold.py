@@ -1,14 +1,14 @@
 import fasttext, os
 import numpy as np
 from testing import Testing
+from utils import DS_INCOMPLETE_PATH
 
-incomplete_path = '/Users/tommaso.gargiani/Documents/FEL/OOD-text-classification/datasets'
 DIM = 100  # dimension of pretrained vectors - either 100 or 300
 
 for dataset_size in ['data_full', 'data_small', 'data_imbalanced']:
     print(f'Testing on: {dataset_size}')
 
-    path = os.path.join(incomplete_path, dataset_size, 'fasttext_labels', 'labels.')
+    path = os.path.join(DS_INCOMPLETE_PATH, dataset_size, 'fasttext_labels', 'labels.')
     val_true = []  # used to find the validation threshold
 
     with open(path + 'val_oos_val', 'r') as f:

@@ -1,8 +1,20 @@
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 
+# File with several functions that come in handy on multiple occasions.
 
-class Utils:
+DS_INCOMPLETE_PATH = '/Users/tommaso.gargiani/Documents/FEL/OOD-text-classification/datasets'
+
+
+class Split:
+    """
+    Class used when splitting the training and test set.
+
+    :attributes:            tfidf - instance of TfidfVectorizer
+                            intents_dct, dict - keys: intent labels, values: unique ids
+                            new_key_value - keeps track of the newest unique id for intents_dct
+    """
+
     def __init__(self):
         self.tfidf = TfidfVectorizer()
         self.intents_dct = {}
@@ -12,9 +24,9 @@ class Utils:
         """
         Splits a part (contained in lst) of dataset into sentences and intents.
         Subsequently, it (fits and) transforms the sentences into a matrix of TF-IDF features.
-        Returns:
-            X - feature matrix
-            y - np.array of intents encoded using intents_dct as numbers
+
+        :returns:           X - feature matrix
+                            y - intents encoded using intents_dct as numbers, np.array
         """
 
         sentences = []
@@ -37,14 +49,38 @@ class Utils:
 
         return X, y
 
-    def get_intents_selection(self, lst, num_samples):
-        unique_intents = list(set([l[1] for l in lst]))
-        selection = np.random.choice(unique_intents, num_samples,
-                                     replace=False)  # replace=False doesn't allow elements to repeat
 
-        return selection
+def get_intents_selection(lst, num_samples):
+    """
+    Returns a random selection of intent labels.
 
-    def get_filtered_lst(self, lst, selection):
-        filtered_lst = [l for l in lst if l[1] in selection]
+    :returns:           selection, (num_samples, ) np.ndarray
+    """
 
-        return filtered_lst
+    unique_intents = list(set([l[1] for l in lst]))
+    selection = np.random.choice(unique_intents, num_samples,
+                                 replace=False)  # replace=False doesn't allow elements to repeat
+
+    return selection
+
+
+def get_filtered_lst(lst, selection):
+    """
+    Filters a list in order to contain only sublists with intent labels contained in selection.
+
+    :returns:           filtered_lst, list
+    """
+    filtered_lst = [l for l in lst if l[1] in selection]
+
+    return filtered_lst
+
+
+def print_results(dataset_size: str, results_dct: dict):
+    """Helper print function."""
+
+    print(
+        f'dataset_size: {dataset_size} -- '
+        f'accuracy: {round(results_dct["accuracy"], 1)}, '
+        f'recall: {round(results_dct["recall"], 1)}, '
+        f'far: {round(results_dct["far"], 1)}, '
+        f'frr: {round(results_dct["frr"], 1)}\n')
