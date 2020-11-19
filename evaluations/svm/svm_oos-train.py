@@ -2,7 +2,7 @@ from sklearn import svm
 import json, os, copy
 from testing import Testing
 from utils import Split, get_intents_selection, get_filtered_lst, print_results, DS_INCOMPLETE_PATH
-import numpy as np
+from numpy import mean
 
 
 def evaluate(dataset):
@@ -64,10 +64,10 @@ if __name__ == '__main__':
                     frr_lst.append(temp_res['frr'])
 
                 results_dct = {}  # computed as mean of all temporary results
-                results_dct['accuracy'] = float(np.mean(accuracy_lst))
-                results_dct['recall'] = float(np.mean(recall_lst))
-                results_dct['far'] = float(np.mean(far_lst))
-                results_dct['frr'] = float(np.mean(frr_lst))
+                results_dct['accuracy'] = float(mean(accuracy_lst))
+                results_dct['recall'] = float(mean(recall_lst))
+                results_dct['far'] = float(mean(far_lst))
+                results_dct['frr'] = float(mean(frr_lst))
 
                 print_results(dataset_size, results_dct)
 
