@@ -1,82 +1,95 @@
-import fasttext, os
-import numpy as np
+import fasttext, os, json, copy
 from testing import Testing
-from utils import DS_INCOMPLETE_PATH
+from utils import get_intents_selection, get_filtered_lst, print_results, dataset_2_string, get_X_y_fasttext, \
+    find_best_threshold, DS_INCOMPLETE_PATH, PRETRAINED_VECTORS_PATH
+from tempfile import NamedTemporaryFile
+from numpy import mean
 
-DIM = 100  # dimension of pretrained vectors - either 100 or 300
 
-for dataset_size in ['data_full', 'data_small', 'data_imbalanced']:
-    print(f'Testing on: {dataset_size}')
+def evaluate(dataset, dim: int):
+    train_str = dataset_2_string(dataset['train'])
+    X_val, y_val = get_X_y_fasttext(dataset['val'] + dataset['oos_val'])
+    X_test, y_test = get_X_y_fasttext(dataset['test'] + dataset['oos_test'])
 
-    path = os.path.join(DS_INCOMPLETE_PATH, dataset_size, 'fasttext_labels', 'labels.')
-    val_true = []  # used to find the validation threshold
+    with NamedTemporaryFile() as f:
+        f.write(train_str.encode('utf8'))
+        f.seek(0)
 
-    with open(path + 'val_oos_val', 'r') as f:
-        raw = f.read()
-
-    for line in raw.splitlines():
-        label, message = line.split(' ', 1)
-        val_true.append((label, message))
-
-    X_test = []  # used to check correctness of results
-    y_test = []
-
-    with open(path + 'test_oos_test', 'r') as f:
-        raw = f.read()
-
-    for line in raw.splitlines():
-        label, message = line.split(' ', 1)
-        X_test.append(message)
-        y_test.append(label)
-
-    # Train model for in-scope queries
-    model = fasttext.train_supervised(
-        input=path + 'train', dim=DIM,
-        pretrainedVectors=f'/Users/tommaso.gargiani/Documents/FEL/OOD-text-classification/pretrained_vectors/cc.en.{DIM}.vec')
+        # Train model for in-scope queries
+        model = fasttext.train_supervised(
+            input=f.name, dim=dim,
+            pretrainedVectors=f'{PRETRAINED_VECTORS_PATH}/cc.en.{dim}.vec')
 
     val_predictions_labels = []  # used to find threshold
 
-    for label, message in val_true:
-        pred = model.predict(message)
-        val_predictions_labels.append((pred, label))
+    for sent, true_int_label in zip(X_val, y_val):
+        pred = model.predict(sent)
+        pred_label = pred[0][0]
+        similarity = pred[1][0]
 
-    # Initialize search for best threshold
-    thresholds = np.linspace(0, 1, 101)  # all possible thresholds
-    previous_val_accuracy = 0
-    threshold = 0
+        pred = (pred_label, similarity)
+        val_predictions_labels.append((pred, true_int_label))
 
-    # Find best threshold
-    for idx, tr in enumerate(thresholds):
-        val_accuracy_correct = 0
-        val_accuracy_out_of = 0
-
-        for pred, label in val_predictions_labels:
-            pred_label = pred[0][0]
-            similarity = pred[1][0]
-
-            if similarity < tr:
-                pred_label = '__label__oos'
-
-            if pred_label == label:
-                val_accuracy_correct += 1
-
-            val_accuracy_out_of += 1
-
-        val_accuracy = (val_accuracy_correct / val_accuracy_out_of) * 100
-
-        if val_accuracy < previous_val_accuracy:
-            threshold = thresholds[idx - 1]  # best threshold is the previous one
-            break
-
-        previous_val_accuracy = val_accuracy
-        threshold = tr
+    threshold = find_best_threshold(val_predictions_labels, '__label__oos')
 
     # Test
     testing = Testing(model, X_test, y_test, 'fasttext', '__label__oos')
     results_dct = testing.test_threshold(threshold)
-    print(
-        f'dataset_size: {dataset_size} -- '
-        f'accuracy: {round(results_dct["accuracy"], 1)}, '
-        f'recall: {round(results_dct["recall"], 1)}, '
-        f'far: {round(results_dct["far"], 1)}, '
-        f'frr: {round(results_dct["frr"], 1)}\n')
+
+    return results_dct
+
+
+if __name__ == '__main__':
+    DIM = 100  # dimension of pre-trained vectors - either 100 or 300
+    RANDOM_SELECTION = False  # am I testing using the random selection of IN intents?
+    repetitions = 30  # number of evaluations when using random selection
+
+    for dataset_size in ['data_full', 'data_small', 'data_imbalanced']:
+        print(f'Testing on: {dataset_size}\n')
+
+        path_intents = os.path.join(DS_INCOMPLETE_PATH, dataset_size, dataset_size + '.json')
+
+        with open(path_intents) as f:  # open intent dataset
+            int_ds = json.load(f)
+
+        if not RANDOM_SELECTION:
+            results_dct = evaluate(int_ds, DIM)
+
+            print_results(dataset_size, results_dct)
+        else:
+            for num_samples in [3, 6, 9, 12]:  # choose only a certain number of samples
+                print(f'{repetitions} times random selection {num_samples} intents')
+
+                accuracy_lst, recall_lst = [], []
+                far_lst, frr_lst = [], []
+
+                for i in range(repetitions):
+                    selection = get_intents_selection(int_ds['train'],
+                                                      num_samples)  # selected intent labels: (num_samples, ) np.ndarray
+
+                    filt_train = get_filtered_lst(int_ds['train'],
+                                                  selection)  # almost the same as int_ds['train'] but filtered according to selection
+                    filt_val = get_filtered_lst(int_ds['val'], selection)
+                    filt_test = get_filtered_lst(int_ds['test'], selection)
+
+                    mod_int_ds = copy.deepcopy(int_ds)  # deepcopy in order to not modify the original dict
+                    mod_int_ds['train'] = filt_train
+                    mod_int_ds['val'] = filt_val
+                    mod_int_ds['test'] = filt_test
+
+                    temp_res = evaluate(mod_int_ds, DIM)  # temporary results
+
+                    accuracy_lst.append(temp_res['accuracy'])
+                    recall_lst.append(temp_res['recall'])
+                    far_lst.append(temp_res['far'])
+                    frr_lst.append(temp_res['frr'])
+
+                results_dct = {}  # computed as mean of all temporary results
+                results_dct['accuracy'] = float(mean(accuracy_lst))
+                results_dct['recall'] = float(mean(recall_lst))
+                results_dct['far'] = float(mean(far_lst))
+                results_dct['frr'] = float(mean(frr_lst))
+
+                print_results(dataset_size, results_dct)
+
+        print('------------------------------------\n')

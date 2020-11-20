@@ -5,7 +5,7 @@ from utils import Split, get_intents_selection, get_filtered_lst, print_results,
 from numpy import mean
 
 
-def evaluate(binary_dataset, svc_int, split):
+def evaluate(binary_dataset, svc_int, X_int_test, y_int_test, split):
     X_bin_train, y_bin_train = split.get_X_y(binary_dataset['train'], fit=False)
     # X_bin_test, y_bin_test = split.get_X_y(binary_dataset['test'], fit=False)
 
@@ -45,7 +45,7 @@ if __name__ == '__main__':
             bin_ds = json.load(f)
 
         if not RANDOM_SELECTION:
-            results_dct = evaluate(bin_ds, svc_int, split)
+            results_dct = evaluate(bin_ds, svc_int, X_int_test, y_int_test, split)
 
             print_results(dataset_size, results_dct)
         else:
@@ -67,7 +67,7 @@ if __name__ == '__main__':
                     mod_bin_ds['train'] = filt_train
                     # mod_bin_ds['test'] = filt_test
 
-                    temp_res = evaluate(mod_bin_ds, svc_int, split)  # temporary results
+                    temp_res = evaluate(mod_bin_ds, svc_int, X_int_test, y_int_test, split)  # temporary results
 
                     accuracy_lst.append(temp_res['accuracy'])
                     recall_lst.append(temp_res['recall'])

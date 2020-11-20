@@ -4,11 +4,12 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 # File with several functions that come in handy on multiple occasions.
 
 DS_INCOMPLETE_PATH = '/Users/tommaso.gargiani/Documents/FEL/OOD-text-classification/datasets'
+PRETRAINED_VECTORS_PATH = '/Users/tommaso.gargiani/Documents/FEL/OOD-text-classification/pretrained_vectors'
 
 
 class Split:
     """
-    Class used when splitting the training and test set.
+    Class used when splitting the training and test set in scikit-learn.
 
     :attributes:            tfidf - instance of TfidfVectorizer
                             intents_dct, dict - keys: intent labels, values: unique ids
@@ -50,10 +51,12 @@ class Split:
         return X, y
 
 
-def get_intents_selection(lst, num_samples):
+def get_intents_selection(lst, num_samples: int):
     """
     Returns a random selection of intent labels.
 
+    :params:            lst - contains sublists in the following form: [message, label]
+                        num_samples, int
     :returns:           selection, (num_samples, ) np.ndarray
     """
 
@@ -91,7 +94,7 @@ def find_best_threshold(val_predictions_labels, oos_label):
     Function used to find the best threshold in oos-threshold.
 
     :params:            val_predictions_labels - prediction on the validation set, list
-                        oos_label - changes when used with sk-learn or FastText
+                        oos_label - changes when used with scikit-learn or FastText
     :returns:           threshold - best threshold
     """
 
@@ -127,3 +130,38 @@ def find_best_threshold(val_predictions_labels, oos_label):
         threshold = tr
 
     return threshold
+
+
+def dataset_2_string(lst: list):
+    """
+    Converts the dataset list into a string that is later converted to file
+    in order to be used by FastText's train_supervised() method.
+
+    :params:            lst - contains the dataset, list
+    :returns:           ds_str, str
+    """
+
+    ds_str = ''
+
+    for sent, label in lst:
+        ds_str += f'__label__{label} {sent}\n'
+
+    return ds_str
+
+
+def get_X_y_fasttext(lst: list):
+    """
+    Splits the dataset into X and y that are later used in FastText testing.
+
+    :params:            lst - contains the dataset, list
+    :returns:           X - contains sentences, list
+                        y - contains labels, list
+    """
+
+    X, y = [], []
+
+    for sent, label in lst:
+        X.append(sent)
+        y.append(f'__label__{label}')
+
+    return X, y
