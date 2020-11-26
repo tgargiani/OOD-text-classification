@@ -1,7 +1,7 @@
 import fasttext, os, json, copy
 from testing import Testing
 from utils import get_intents_selection, get_filtered_lst, print_results, dataset_2_string, get_X_y_fasttext, \
-    DS_INCOMPLETE_PATH, PRETRAINED_VECTORS_PATH
+    save_results, DS_INCOMPLETE_PATH, PRETRAINED_VECTORS_PATH
 from tempfile import NamedTemporaryFile
 from numpy import mean
 
@@ -34,7 +34,7 @@ if __name__ == '__main__':
     for dataset_size in ['data_full', 'data_small', 'data_imbalanced', 'data_oos_plus']:
         print(f'Testing on: {dataset_size}')
 
-        path_intents = os.path.join(DS_INCOMPLETE_PATH, dataset_size, dataset_size + '.json')
+        path_intents = os.path.join(DS_INCOMPLETE_PATH, dataset_size + '.json')
 
         with open(path_intents) as f:  # open intent dataset
             int_ds = json.load(f)
@@ -74,6 +74,10 @@ if __name__ == '__main__':
                 results_dct['recall'] = float(mean(recall_lst))
                 results_dct['far'] = float(mean(far_lst))
                 results_dct['frr'] = float(mean(frr_lst))
+
+                # save_results('fasttext', 'oos-train', dataset_size, num_samples,
+                #              {'accuracy_lst': accuracy_lst, 'recall_lst': recall_lst, 'far_lst': far_lst,
+                #               'frr_lst': frr_lst}, results_dct)
 
                 print_results(dataset_size, results_dct)
 

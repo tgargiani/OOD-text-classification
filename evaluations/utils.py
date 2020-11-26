@@ -1,10 +1,12 @@
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
+import os
 
 # File with several functions that come in handy on multiple occasions.
 
 DS_INCOMPLETE_PATH = '/Users/tommaso.gargiani/Documents/FEL/OOD-text-classification/datasets'
 PRETRAINED_VECTORS_PATH = '/Users/tommaso.gargiani/Documents/FEL/OOD-text-classification/pretrained_vectors'
+RESULTS_PATH = '/Users/tommaso.gargiani/Documents/FEL/OOD-text-classification/results'
 
 
 class Split:
@@ -165,3 +167,28 @@ def get_X_y_fasttext(lst: list):
         y.append(f'__label__{label}')
 
     return X, y
+
+
+def save_results(classifier: str, method: str, dataset_size: str, num_samples: int, list_results: dict, results: dict):
+    """Saves the results of random selection computations into a .txt file."""
+
+    dir_path = os.path.join(RESULTS_PATH, classifier)
+    path = os.path.join(dir_path, method + '_results' + '.txt')
+
+    if not os.path.exists(dir_path):
+        os.mkdir(dir_path)
+
+    with open(path, 'a') as f:
+        print(
+            f'classifier: {classifier}\n'
+            f'method: {method}\n'
+            f'dataset_size: {dataset_size}\n'
+            f'random selection with {num_samples} samples\n'
+            f'accuracy: {results["accuracy"]}\n'
+            f'recall: {results["recall"]}\n'
+            f'far: {results["far"]}\n'
+            f'frr: {results["frr"]}\n'
+            f'accuracy list: {list_results["accuracy_lst"]}\n'
+            f'recall list: {list_results["recall_lst"]}\n'
+            f'far list: {list_results["far_lst"]}\n'
+            f'frr list: {list_results["frr_lst"]}\n\n', file=f)
