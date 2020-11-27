@@ -69,7 +69,7 @@ if __name__ == '__main__':
                 results_dct['far'] = float(mean(far_lst))
                 results_dct['frr'] = float(mean(frr_lst))
 
-                # save_results('mlp', 'oos-train', dataset_size, num_samples,
+                # save_results('mlp', 'oos-train', dataset_size, num_samples, repetitions,
                 #              {'accuracy_lst': accuracy_lst, 'recall_lst': recall_lst, 'far_lst': far_lst,
                 #               'frr_lst': frr_lst}, results_dct)
 

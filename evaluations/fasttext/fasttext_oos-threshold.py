@@ -41,7 +41,7 @@ def evaluate(dataset, dim: int):
 
 if __name__ == '__main__':
     DIM = 100  # dimension of pre-trained vectors - either 100 or 300
-    RANDOM_SELECTION = False  # am I testing using the random selection of IN intents?
+    RANDOM_SELECTION = True  # am I testing using the random selection of IN intents?
     repetitions = 30  # number of evaluations when using random selection
 
     for dataset_size in ['data_full', 'data_small', 'data_imbalanced']:
@@ -90,7 +90,7 @@ if __name__ == '__main__':
                 results_dct['far'] = float(mean(far_lst))
                 results_dct['frr'] = float(mean(frr_lst))
 
-                # save_results('fasttext', 'oos-threshold', dataset_size, num_samples,
+                # save_results('fasttext', 'oos-threshold', dataset_size, num_samples, repetitions,
                 #              {'accuracy_lst': accuracy_lst, 'recall_lst': recall_lst, 'far_lst': far_lst,
                 #               'frr_lst': frr_lst}, results_dct)
 

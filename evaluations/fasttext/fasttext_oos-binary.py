@@ -8,7 +8,6 @@ from numpy import mean
 
 def evaluate(binary_dataset, model_int, X_int_test, y_int_test, dim):
     train_str_bin = dataset_2_string(binary_dataset['train'])
-    # X_bin_test, y_bin_test = get_X_y_fasttext(binary_dataset['test'])
 
     with NamedTemporaryFile() as f:
         f.write(train_str_bin.encode('utf8'))
@@ -26,19 +25,23 @@ def evaluate(binary_dataset, model_int, X_int_test, y_int_test, dim):
     return results_dct
 
 
-if __name__ == '__main__':
-    DIM = 100  # dimension of pre-trained vectors - either 100 or 300
-    RANDOM_SELECTION = False  # am I testing using the random selection of IN intents?
-    repetitions = 30  # number of evaluations when using random selection
+def train_intent_model(int_ds, random_selection: bool, dim: int, num_samples=None):
+    if random_selection:
+        selection = get_intents_selection(int_ds['train'],
+                                          num_samples)  # selected intent labels: (num_samples, ) np.ndarray
 
-    # Intent classifier
-    path_intents = os.path.join(DS_INCOMPLETE_PATH, 'data_full.json')  # always use data_full dataset
+        filt_train = get_filtered_lst(int_ds['train'],
+                                      selection)  # almost the same as int_ds['train'] but filtered according to selection
 
-    with open(path_intents) as f:
-        int_ds = json.load(f)
+        mod_int_ds = copy.deepcopy(int_ds)  # deepcopy in order to not modify the original dict
+        mod_int_ds['train'] = filt_train
 
-    train_str_int = dataset_2_string(int_ds['train'])
-    X_int_test, y_int_test = get_X_y_fasttext(int_ds['test'] + int_ds['oos_test'])
+        dataset = mod_int_ds
+    else:
+        dataset = int_ds
+
+    train_str_int = dataset_2_string(dataset['train'])
+    X_int_test, y_int_test = get_X_y_fasttext(dataset['test'] + dataset['oos_test'])
 
     with NamedTemporaryFile() as f:
         f.write(train_str_int.encode('utf8'))
@@ -46,8 +49,22 @@ if __name__ == '__main__':
 
         # Train model for in-scope queries
         model_int = fasttext.train_supervised(
-            input=f.name, dim=DIM,
-            pretrainedVectors=f'{PRETRAINED_VECTORS_PATH}/cc.en.{DIM}.vec')
+            input=f.name, dim=dim,
+            pretrainedVectors=f'{PRETRAINED_VECTORS_PATH}/cc.en.{dim}.vec')
+
+    return model_int, X_int_test, y_int_test
+
+
+if __name__ == '__main__':
+    DIM = 100  # dimension of pre-trained vectors - either 100 or 300
+    RANDOM_SELECTION = True  # am I testing using the random selection of IN intents?
+    repetitions = 30  # number of evaluations when using random selection
+
+    # Intent classifier
+    path_intents = os.path.join(DS_INCOMPLETE_PATH, 'data_full.json')  # always use data_full dataset
+
+    with open(path_intents) as f:
+        int_ds = json.load(f)
 
     for dataset_size in ['binary_undersample', 'binary_wiki_aug']:
         print(f'Testing on: {dataset_size}\n')
@@ -59,6 +76,8 @@ if __name__ == '__main__':
             bin_ds = json.load(f)
 
         if not RANDOM_SELECTION:
+            model_int, X_int_test, y_int_test = train_intent_model(int_ds, RANDOM_SELECTION, DIM)
+
             results_dct = evaluate(bin_ds, model_int, X_int_test, y_int_test, DIM)
 
             print_results(dataset_size, results_dct)
@@ -70,18 +89,9 @@ if __name__ == '__main__':
                 far_lst, frr_lst = [], []
 
                 for i in range(repetitions):
-                    selection = get_intents_selection(bin_ds['train'],
-                                                      num_samples)  # selected intent labels: (num_samples, ) np.ndarray
+                    model_int, X_int_test, y_int_test = train_intent_model(int_ds, RANDOM_SELECTION, DIM, num_samples)
 
-                    filt_train = get_filtered_lst(bin_ds['train'],
-                                                  selection)  # almost the same as int_ds['train'] but filtered according to selection
-                    # filt_test = get_filtered_lst(bin_ds['test'], selection)
-
-                    mod_bin_ds = copy.deepcopy(bin_ds)  # deepcopy in order to not modify the original dict
-                    mod_bin_ds['train'] = filt_train
-                    # mod_bin_ds['test'] = filt_test
-
-                    temp_res = evaluate(mod_bin_ds, model_int, X_int_test, y_int_test, DIM)  # temporary results
+                    temp_res = evaluate(bin_ds, model_int, X_int_test, y_int_test, DIM)  # temporary results
 
                     accuracy_lst.append(temp_res['accuracy'])
                     recall_lst.append(temp_res['recall'])
@@ -94,7 +104,7 @@ if __name__ == '__main__':
                 results_dct['far'] = float(mean(far_lst))
                 results_dct['frr'] = float(mean(frr_lst))
 
-                # save_results('fasttext', 'oos-binary', dataset_size, num_samples,
+                # save_results('fasttext', 'oos-binary', dataset_size, num_samples, repetitions,
                 #              {'accuracy_lst': accuracy_lst, 'recall_lst': recall_lst, 'far_lst': far_lst,
                 #               'frr_lst': frr_lst}, results_dct)
 

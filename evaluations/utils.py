@@ -169,7 +169,8 @@ def get_X_y_fasttext(lst: list):
     return X, y
 
 
-def save_results(classifier: str, method: str, dataset_size: str, num_samples: int, list_results: dict, results: dict):
+def save_results(classifier: str, method: str, dataset_size: str, num_samples: int, repetitions: int,
+                 list_results: dict, results: dict):
     """Saves the results of random selection computations into a .txt file."""
 
     dir_path = os.path.join(RESULTS_PATH, classifier)
@@ -183,11 +184,11 @@ def save_results(classifier: str, method: str, dataset_size: str, num_samples: i
             f'classifier: {classifier}\n'
             f'method: {method}\n'
             f'dataset_size: {dataset_size}\n'
-            f'random selection with {num_samples} samples\n'
-            f'accuracy: {results["accuracy"]}\n'
-            f'recall: {results["recall"]}\n'
-            f'far: {results["far"]}\n'
-            f'frr: {results["frr"]}\n'
+            f'{repetitions} times random select {num_samples} intents\n'
+            f'accuracy: {round(results["accuracy"], 1)}\n'
+            f'recall: {round(results["recall"], 1)}\n'
+            f'far: {round(results["far"], 1)}\n'
+            f'frr: {round(results["frr"], 1)}\n'
             f'accuracy list: {list_results["accuracy_lst"]}\n'
             f'recall list: {list_results["recall_lst"]}\n'
             f'far list: {list_results["far_lst"]}\n'
