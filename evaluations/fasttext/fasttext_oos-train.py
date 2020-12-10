@@ -30,6 +30,7 @@ if __name__ == '__main__':
     DIM = 100  # dimension of pre-trained vectors - either 100 or 300
     RANDOM_SELECTION = True  # am I testing using the random selection of IN intents?
     repetitions = 30  # number of evaluations when using random selection
+    print(f'DIM: {DIM}')
 
     for dataset_size in ['data_full', 'data_small', 'data_imbalanced', 'data_oos_plus']:
         print(f'Testing on: {dataset_size}')

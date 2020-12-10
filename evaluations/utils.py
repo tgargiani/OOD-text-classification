@@ -4,9 +4,9 @@ import os
 
 # File with several functions that come in handy on multiple occasions.
 
-DS_INCOMPLETE_PATH = '/Users/tommaso.gargiani/Documents/FEL/OOD-text-classification/datasets'
-PRETRAINED_VECTORS_PATH = '/Users/tommaso.gargiani/Documents/FEL/OOD-text-classification/pretrained_vectors'
-RESULTS_PATH = '/Users/tommaso.gargiani/Documents/FEL/OOD-text-classification/results'
+DS_INCOMPLETE_PATH = '../datasets'
+PRETRAINED_VECTORS_PATH = '../pretrained_vectors'
+RESULTS_PATH = '../results'
 
 
 class Split:
@@ -49,6 +49,41 @@ class Split:
             X = self.tfidf.transform(sentences)
 
         y = np.asarray(intents)
+
+        return X, y
+
+
+class Split_BERT:
+    """
+    Class used when splitting the training and test set in BERT.
+
+    :attributes:            intents_dct, dict - keys: intent labels, values: unique ids
+                            new_key_value - keeps track of the newest unique id for intents_dct
+    """
+
+    def __init__(self):
+        self.intents_dct = {}
+        self.new_key_value = 0
+
+    def get_X_y(self, lst):
+        """
+        Splits a part (contained in lst) of dataset into sentences and intents.
+        Subsequently, it (fits and) transforms the sentences into a matrix of TF-IDF features.
+
+        :returns:           X - sentences, list
+                            y - intents, list
+        """
+
+        X = []
+        y = []
+
+        for sent, label in lst:
+            if label not in self.intents_dct.keys():
+                self.intents_dct[label] = self.new_key_value
+                self.new_key_value += 1
+
+            X.append(sent)
+            y.append(self.intents_dct[label])
 
         return X, y
 

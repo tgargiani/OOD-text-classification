@@ -59,6 +59,7 @@ if __name__ == '__main__':
     DIM = 100  # dimension of pre-trained vectors - either 100 or 300
     RANDOM_SELECTION = True  # am I testing using the random selection of IN intents?
     repetitions = 30  # number of evaluations when using random selection
+    print(f'DIM: {DIM}')
 
     # Intent classifier
     path_intents = os.path.join(DS_INCOMPLETE_PATH, 'data_full.json')  # always use data_full dataset
