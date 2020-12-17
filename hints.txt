@@ -1,3 +1,0 @@
-nejvyšší accuracy na validační množině
-accuracy - co predikoval klas. a reálnej label
-threshold budu postupně měnit během validační části

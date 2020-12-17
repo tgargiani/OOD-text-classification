@@ -6,13 +6,16 @@ from utils import Split, get_intents_selection, get_filtered_lst, print_results,
 from numpy import mean, argmax
 
 
-def evaluate(dataset):
+def evaluate(dataset, limit_num_sents: bool):
     # Split dataset
     split = Split()
 
-    X_train, y_train = split.get_X_y(dataset['train'], fit=True)  # fit only on first dataset
-    X_val, y_val = split.get_X_y(dataset['val'] + dataset['oos_val'], fit=False)
-    X_test, y_test = split.get_X_y(dataset['test'] + dataset['oos_test'], fit=False)
+    X_train, y_train = split.get_X_y(dataset['train'], fit=True, limit_num_sents=limit_num_sents,
+                                     set_type='train')  # fit only on first dataset
+    X_val, y_val = split.get_X_y(dataset['val'] + dataset['oos_val'], fit=False, limit_num_sents=limit_num_sents,
+                                 set_type='val')
+    X_test, y_test = split.get_X_y(dataset['test'] + dataset['oos_test'], fit=False, limit_num_sents=limit_num_sents,
+                                   set_type='test')
 
     svc_int = svm.SVC(C=1, kernel='linear', probability=True).fit(X_train, y_train)
 
@@ -38,6 +41,7 @@ def evaluate(dataset):
 if __name__ == '__main__':
     RANDOM_SELECTION = True  # am I testing using the random selection of IN intents?
     repetitions = 30  # number of evaluations when using random selection
+    LIMIT_NUM_SENTS = True  # am I limiting the number of sentences of each intent?
 
     for dataset_size in ['data_full', 'data_small', 'data_imbalanced']:
         print(f'Testing on: {dataset_size}\n')
@@ -48,7 +52,7 @@ if __name__ == '__main__':
             int_ds = json.load(f)
 
         if not RANDOM_SELECTION:
-            results_dct = evaluate(int_ds)
+            results_dct = evaluate(int_ds, LIMIT_NUM_SENTS)
 
             print_results(dataset_size, results_dct)
         else:
@@ -72,7 +76,7 @@ if __name__ == '__main__':
                     mod_int_ds['val'] = filt_val
                     mod_int_ds['test'] = filt_test
 
-                    temp_res = evaluate(mod_int_ds)  # temporary results
+                    temp_res = evaluate(mod_int_ds, LIMIT_NUM_SENTS)  # temporary results
 
                     accuracy_lst.append(temp_res['accuracy'])
                     recall_lst.append(temp_res['recall'])

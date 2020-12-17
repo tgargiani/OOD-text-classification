@@ -1,10 +1,7 @@
-vyzkoušet na wiki, common crawl, cc (kombinace common crawlu a wiki)
-zkusit red. z 300 na 100 (cc)
+pro kazdy z nahodne vybranych intentu (3, 6, ....) vyberu jen 18 nahodnych vet + labelu - to plati na...
+...trenovaci a validacni, na testovaci pouzit vsechny vety - 18, 18, 30
+tohle nahore udelat i na vsech, nejen nahodne vybranych
 
-zjistit kolik je neznamejch slov z glove (v cnn)
-cnn - vstupni, embedding (non static -> trainable=True, aby se dotrenovaly), weights - slova z glovu, trainable),
-        konvoluce, dense, mezitim maxpooling, regularizace nemusim
-slova se muzou lemmovat, stemmovat, to muze pomoct (kdyztak pozdeji)
-hodi se model.summary
+kdyz je oos soucasti trainu, tak pomer 20, 20, 60 (train, val, test) - pro oos
 
-ukladat listy, ze kterejch se prumeruje vysledek
+kdybych mel 10 intentu + 1 intent oos a oos bude soucasti train, tak budu mit 10 * 18 + 20 vet

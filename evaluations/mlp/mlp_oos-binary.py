@@ -17,7 +17,7 @@ def evaluate(binary_dataset, mlp_int, X_int_test, y_int_test, split):
     return results_dct
 
 
-def train_intent_model(int_ds, random_selection: bool, num_samples=None):
+def train_intent_model(int_ds, random_selection: bool, limit_num_samples: bool, num_samples=None):
     if random_selection:
         selection = get_intents_selection(int_ds['train'],
                                           num_samples)  # selected intent labels: (num_samples, ) np.ndarray
@@ -34,8 +34,10 @@ def train_intent_model(int_ds, random_selection: bool, num_samples=None):
 
     split = Split()
 
-    X_int_train, y_int_train = split.get_X_y(dataset['train'], fit=True)  # fit only on first dataset
-    X_int_test, y_int_test = split.get_X_y(dataset['test'] + dataset['oos_test'], fit=False)
+    X_int_train, y_int_train = split.get_X_y(dataset['train'], fit=True, limit_num_sents=limit_num_samples,
+                                             set_type='train')  # fit only on first dataset
+    X_int_test, y_int_test = split.get_X_y(dataset['test'] + dataset['oos_test'], fit=False,
+                                           limit_num_sents=limit_num_samples, set_type='test')
 
     mlp_int = MLPClassifier(activation='tanh').fit(X_int_train, y_int_train)
 
@@ -45,6 +47,7 @@ def train_intent_model(int_ds, random_selection: bool, num_samples=None):
 if __name__ == '__main__':
     RANDOM_SELECTION = True  # am I testing using the random selection of IN intents?
     repetitions = 30  # number of evaluations when using random selection
+    LIMIT_NUM_SENTS = True  # am I limiting the number of sentences of each intent?
 
     # Intent classifier
     path_intents = os.path.join(DS_INCOMPLETE_PATH, 'data_full.json')  # always use data_full dataset
@@ -62,7 +65,7 @@ if __name__ == '__main__':
             bin_ds = json.load(f)
 
         if not RANDOM_SELECTION:
-            mlp_int, X_int_test, y_int_test, split = train_intent_model(int_ds, RANDOM_SELECTION)
+            mlp_int, X_int_test, y_int_test, split = train_intent_model(int_ds, RANDOM_SELECTION, LIMIT_NUM_SENTS)
 
             results_dct = evaluate(bin_ds, mlp_int, X_int_test, y_int_test, split)
 
@@ -75,7 +78,8 @@ if __name__ == '__main__':
                 far_lst, frr_lst = [], []
 
                 for i in range(repetitions):
-                    mlp_int, X_int_test, y_int_test, split = train_intent_model(int_ds, RANDOM_SELECTION, num_samples)
+                    mlp_int, X_int_test, y_int_test, split = train_intent_model(int_ds, RANDOM_SELECTION,
+                                                                                LIMIT_NUM_SENTS, num_samples)
 
                     temp_res = evaluate(bin_ds, mlp_int, X_int_test, y_int_test, split)  # temporary results
 
