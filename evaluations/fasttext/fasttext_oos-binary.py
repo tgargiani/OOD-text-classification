@@ -7,7 +7,7 @@ from numpy import mean
 
 
 def evaluate(binary_dataset, model_int, X_int_test, y_int_test, dim):
-    train_str_bin = dataset_2_string(binary_dataset['train'])
+    train_str_bin = dataset_2_string(binary_dataset['train'], limit_num_sents=False, set_type='train')
 
     with NamedTemporaryFile() as f:
         f.write(train_str_bin.encode('utf8'))
@@ -25,7 +25,7 @@ def evaluate(binary_dataset, model_int, X_int_test, y_int_test, dim):
     return results_dct
 
 
-def train_intent_model(int_ds, random_selection: bool, dim: int, num_samples=None):
+def train_intent_model(int_ds, random_selection: bool, dim: int, limit_num_sents: bool, num_samples=None):
     if random_selection:
         selection = get_intents_selection(int_ds['train'],
                                           num_samples)  # selected intent labels: (num_samples, ) np.ndarray
@@ -40,8 +40,9 @@ def train_intent_model(int_ds, random_selection: bool, dim: int, num_samples=Non
     else:
         dataset = int_ds
 
-    train_str_int = dataset_2_string(dataset['train'])
-    X_int_test, y_int_test = get_X_y_fasttext(dataset['test'] + dataset['oos_test'])
+    train_str_int = dataset_2_string(dataset['train'], limit_num_sents=limit_num_sents, set_type='train')
+    X_int_test, y_int_test = get_X_y_fasttext(dataset['test'] + dataset['oos_test'], limit_num_sents=limit_num_sents,
+                                              set_type='test')
 
     with NamedTemporaryFile() as f:
         f.write(train_str_int.encode('utf8'))
@@ -59,6 +60,8 @@ if __name__ == '__main__':
     DIM = 100  # dimension of pre-trained vectors - either 100 or 300
     RANDOM_SELECTION = True  # am I testing using the random selection of IN intents?
     repetitions = 30  # number of evaluations when using random selection
+    LIMIT_NUM_SENTS = True  # am I limiting the number of sentences of each intent?
+
     print(f'DIM: {DIM}')
 
     # Intent classifier
@@ -77,7 +80,7 @@ if __name__ == '__main__':
             bin_ds = json.load(f)
 
         if not RANDOM_SELECTION:
-            model_int, X_int_test, y_int_test = train_intent_model(int_ds, RANDOM_SELECTION, DIM)
+            model_int, X_int_test, y_int_test = train_intent_model(int_ds, RANDOM_SELECTION, DIM, LIMIT_NUM_SENTS)
 
             results_dct = evaluate(bin_ds, model_int, X_int_test, y_int_test, DIM)
 
@@ -90,7 +93,8 @@ if __name__ == '__main__':
                 far_lst, frr_lst = [], []
 
                 for i in range(repetitions):
-                    model_int, X_int_test, y_int_test = train_intent_model(int_ds, RANDOM_SELECTION, DIM, num_samples)
+                    model_int, X_int_test, y_int_test = train_intent_model(int_ds, RANDOM_SELECTION, DIM,
+                                                                           LIMIT_NUM_SENTS, num_samples)
 
                     temp_res = evaluate(bin_ds, model_int, X_int_test, y_int_test, DIM)  # temporary results
 

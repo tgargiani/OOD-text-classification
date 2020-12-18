@@ -6,9 +6,11 @@ from tempfile import NamedTemporaryFile
 from numpy import mean
 
 
-def evaluate(dataset, dim: int):
-    train_str = dataset_2_string(dataset['train'] + dataset['oos_train'])
-    X_test, y_test = get_X_y_fasttext(dataset['test'] + dataset['oos_test'])
+def evaluate(dataset, dim: int, limit_num_sents: bool):
+    train_str = dataset_2_string(dataset['train'] + dataset['oos_train'], limit_num_sents=limit_num_sents,
+                                 set_type='train')
+    X_test, y_test = get_X_y_fasttext(dataset['test'] + dataset['oos_test'], limit_num_sents=limit_num_sents,
+                                      set_type='test')
 
     with NamedTemporaryFile() as f:
         f.write(train_str.encode('utf8'))
@@ -30,6 +32,8 @@ if __name__ == '__main__':
     DIM = 100  # dimension of pre-trained vectors - either 100 or 300
     RANDOM_SELECTION = True  # am I testing using the random selection of IN intents?
     repetitions = 30  # number of evaluations when using random selection
+    LIMIT_NUM_SENTS = True  # am I limiting the number of sentences of each intent?
+
     print(f'DIM: {DIM}')
 
     for dataset_size in ['data_full', 'data_small', 'data_imbalanced', 'data_oos_plus']:
@@ -41,7 +45,7 @@ if __name__ == '__main__':
             int_ds = json.load(f)
 
         if not RANDOM_SELECTION:
-            results_dct = evaluate(int_ds, DIM)
+            results_dct = evaluate(int_ds, DIM, LIMIT_NUM_SENTS)
 
             print_results(dataset_size, results_dct)
         else:
@@ -63,7 +67,7 @@ if __name__ == '__main__':
                     mod_int_ds['train'] = filt_train
                     mod_int_ds['test'] = filt_test
 
-                    temp_res = evaluate(mod_int_ds, DIM)  # temporary results
+                    temp_res = evaluate(mod_int_ds, DIM, LIMIT_NUM_SENTS)  # temporary results
 
                     accuracy_lst.append(temp_res['accuracy'])
                     recall_lst.append(temp_res['recall'])

@@ -31,6 +31,10 @@ class Split:
         Splits a part (contained in lst) of dataset into sentences and intents.
         Subsequently, it (fits and) transforms the sentences into a matrix of TF-IDF features.
 
+        :params:            lst - contains the dataset, list
+                            fit - specifies whether the vectorizer should be fit to this dataset, bool
+                            limit_num_sents - specifies if every intent should have a limited number of sentences, bool
+                            set_type - specifies the type of the received dataset (train, val or test), str
         :returns:           X - feature matrix
                             y - intents encoded using intents_dct as numbers, np.array
         """
@@ -205,35 +209,71 @@ def find_best_threshold(val_predictions_labels, oos_label):
     return threshold
 
 
-def dataset_2_string(lst: list):
+def dataset_2_string(lst: list, limit_num_sents: bool, set_type: str):
     """
     Converts the dataset list into a string that is later converted to file
     in order to be used by FastText's train_supervised() method.
 
     :params:            lst - contains the dataset, list
+                        limit_num_sents - specifies if every intent should have a limited number of sentences, bool
+                        set_type - specifies the type of the received dataset (train, val or test), str
     :returns:           ds_str, str
     """
 
     ds_str = ''
 
+    if limit_num_sents:  # these aren't needed normally
+        random.shuffle(lst)
+        label_occur_count = {}
+
     for sent, label in lst:
+        if limit_num_sents:
+            if label not in label_occur_count.keys():
+                label_occur_count[label] = 0
+
+            # limit of occurrence of specific intent:
+            occur_limit = NUM_SENTS[set_type] if label != 'oos' else NUM_SENTS[f'{set_type}_oos']
+
+            if label_occur_count[label] == occur_limit:  # skip sentence and label if reached limit
+                continue
+
+            label_occur_count[label] += 1
+
         ds_str += f'__label__{label} {sent}\n'
 
     return ds_str
 
 
-def get_X_y_fasttext(lst: list):
+def get_X_y_fasttext(lst: list, limit_num_sents: bool, set_type: str):
     """
     Splits the dataset into X and y that are later used in FastText testing.
 
     :params:            lst - contains the dataset, list
+                        limit_num_sents - specifies if every intent should have a limited number of sentences, bool
+                        set_type - specifies the type of the received dataset (train, val or test), str
     :returns:           X - contains sentences, list
                         y - contains labels, list
     """
 
     X, y = [], []
 
+    if limit_num_sents:  # these aren't needed normally
+        random.shuffle(lst)
+        label_occur_count = {}
+
     for sent, label in lst:
+        if limit_num_sents:
+            if label not in label_occur_count.keys():
+                label_occur_count[label] = 0
+
+            # limit of occurrence of specific intent:
+            occur_limit = NUM_SENTS[set_type] if label != 'oos' else NUM_SENTS[f'{set_type}_oos']
+
+            if label_occur_count[label] == occur_limit:  # skip sentence and label if reached limit
+                continue
+
+            label_occur_count[label] += 1
+
         X.append(sent)
         y.append(f'__label__{label}')
 
