@@ -1,4 +1,5 @@
 import numpy as np
+import tensorflow as tf
 
 
 # TP = predicted as OOD and true label is OOD
@@ -30,13 +31,20 @@ class Testing:
 
         tp, tn, fp, fn = 0, 0, 0, 0
 
-        predictions = self.model.predict(self.X_test)
+        if self.model_type in ['fasttext', 'svm', 'mlp']:
+            predictions = self.model.predict(self.X_test)
+        elif self.model_type == 'bert':
+            tf_output = self.model.predict([self.X_test['test_ids'], self.X_test['test_attention_masks']])
+            tf_output = tf_output[0]
+            predictions = tf.nn.softmax(tf_output, axis=1).numpy()
 
         # unify different output formats of various model.predict() functions
         if self.model_type == 'fasttext':
             pred_labels = [label[0] for label in predictions[0]]
         elif self.model_type in ['svm', 'mlp']:
             pred_labels = predictions
+        elif self.model_type == 'bert':
+            pred_labels = np.argmax(predictions, axis=1)
 
         for pred_label, true_label in zip(pred_labels, self.y_test):
 

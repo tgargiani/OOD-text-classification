@@ -88,11 +88,14 @@ class Split_BERT:
         self.intents_dct = {}
         self.new_key_value = 0
 
-    def get_X_y(self, lst):
+    def get_X_y(self, lst, limit_num_sents: bool, set_type: str):
         """
         Splits a part (contained in lst) of dataset into sentences and intents.
         Subsequently, it (fits and) transforms the sentences into a matrix of TF-IDF features.
 
+        :params:            lst - contains the dataset, list
+                            limit_num_sents - specifies if every intent should have a limited number of sentences, bool
+                            set_type - specifies the type of the received dataset (train, val or test), str
         :returns:           X - sentences, list
                             y - intents, list
         """
@@ -100,10 +103,26 @@ class Split_BERT:
         X = []
         y = []
 
+        if limit_num_sents:  # these aren't needed normally
+            random.shuffle(lst)
+            label_occur_count = {}
+
         for sent, label in lst:
             if label not in self.intents_dct.keys():
                 self.intents_dct[label] = self.new_key_value
                 self.new_key_value += 1
+
+            if limit_num_sents:
+                if label not in label_occur_count.keys():
+                    label_occur_count[label] = 0
+
+                # limit of occurrence of specific intent:
+                occur_limit = NUM_SENTS[set_type] if label != 'oos' else NUM_SENTS[f'{set_type}_oos']
+
+                if label_occur_count[label] == occur_limit:  # skip sentence and label if reached limit
+                    continue
+
+                label_occur_count[label] += 1
 
             X.append(sent)
             y.append(self.intents_dct[label])
@@ -111,9 +130,7 @@ class Split_BERT:
         return X, y
 
 
-def tokenize_BERT(X, y):
-    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-
+def tokenize_BERT(X, y, tokenizer):
     input_ids = []
     attention_masks = []
 
@@ -123,9 +140,11 @@ def tokenize_BERT(X, y):
         input_ids.append(bert_inp['input_ids'])
         attention_masks.append(bert_inp['attention_mask'])
 
-    train_ids = np.asarray(input_ids)
-    train_attention_masks = np.array(attention_masks)
-    train_labels = np.array(y)
+    ids = np.asarray(input_ids)
+    attention_masks = np.array(attention_masks)
+    labels = np.array(y)
+
+    return ids, attention_masks, labels
 
 
 def get_intents_selection(lst, num_samples: int):
