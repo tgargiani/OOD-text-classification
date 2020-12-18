@@ -6,7 +6,8 @@ from numpy import mean
 
 
 def evaluate(binary_dataset, mlp_int, X_int_test, y_int_test, split):
-    X_bin_train, y_bin_train = split.get_X_y(binary_dataset['train'], fit=False)
+    X_bin_train, y_bin_train = split.get_X_y(binary_dataset['train'], fit=False, limit_num_sents=False,
+                                             set_type='train')
 
     mlp_bin = MLPClassifier(activation='tanh').fit(X_bin_train, y_bin_train)
 
