@@ -5,3 +5,10 @@ tohle nahore udelat i na vsech, nejen nahodne vybranych
 kdyz je oos soucasti trainu, tak pomer 20, 20, 60 (train, val, test) - pro oos
 
 kdybych mel 10 intentu + 1 intent oos a oos bude soucasti train, tak budu mit 10 * 18 + 20 vet
+
+
+ZAVERECNA PRACE
+confluence
+uvod (co je za problem), popis soucasnych reseni (shrnout pristupy v clanku),
+tabulku shrnout + co se delalo navic (zmensene vybery,...), jaky zaver plyne z tabulky,
+rict treba ze tenhle pristup vychazi lip nez jinej..., porovnat vysledky s puvodnima, mereni na mene tridach
