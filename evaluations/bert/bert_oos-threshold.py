@@ -1,10 +1,10 @@
 import os, json, copy
 from utils import DS_INCOMPLETE_PATH, Split_BERT, tokenize_BERT, get_filtered_lst, print_results, get_intents_selection, \
-    save_results
+    save_results, find_best_threshold
 from testing import Testing
 from transformers import TFBertForSequenceClassification, BertTokenizer
 import tensorflow as tf
-from numpy import mean
+from numpy import mean, argmax
 
 
 def evaluate(dataset, limit_num_sents: bool):
@@ -49,12 +49,24 @@ def evaluate(dataset, limit_num_sents: bool):
                         validation_data=([val_ids, val_attention_masks], val_labels),
                         callbacks=callbacks)
 
-    # TODO: rest (= implement validation search of threshold)
+    val_predictions_labels = []  # used to find threshold
+
+    for sent_id, sent_attention_mask, true_int_label in zip(val_ids, val_attention_masks, val_labels):
+        tf_output = model.predict([sent_id, sent_attention_mask])
+        tf_output = tf_output[0]
+        pred_probs = tf.nn.softmax(tf_output, axis=1).numpy()  # intent prediction probabilities
+        pred_label = argmax(pred_probs, axis=1)  # intent prediction
+        similarity = pred_probs[pred_label]
+
+        pred = (pred_label, similarity)
+        val_predictions_labels.append((pred, true_int_label))
+
+    threshold = find_best_threshold(val_predictions_labels, split.intents_dct['oos'])
 
     # Test
     testing = Testing(model, {'test_ids': test_ids, 'test_attention_masks': test_attention_masks}, test_labels,
                       'bert', split.intents_dct['oos'])
-    results_dct = testing.test_train()
+    results_dct = testing.test_threshold(threshold)
 
     return results_dct
 
@@ -64,7 +76,7 @@ if __name__ == '__main__':
     repetitions = 30  # number of evaluations when using random selection
     LIMIT_NUM_SENTS = True  # am I limiting the number of sentences of each intent?
 
-    for dataset_size in ['data_full']:  # , 'data_small', 'data_imbalanced', 'data_oos_plus']:
+    for dataset_size in ['data_full', 'data_small', 'data_imbalanced', 'data_oos_plus']:
         print(f'Testing on: {dataset_size}')
 
         path_intents = os.path.join(DS_INCOMPLETE_PATH, dataset_size + '.json')
@@ -110,7 +122,7 @@ if __name__ == '__main__':
                 results_dct['far'] = float(mean(far_lst))
                 results_dct['frr'] = float(mean(frr_lst))
 
-                # save_results('svm', 'oos-train', dataset_size, num_samples, repetitions,
+                # save_results('bert', 'oos-threshold', dataset_size, num_samples, repetitions,
                 #              {'accuracy_lst': accuracy_lst, 'recall_lst': recall_lst, 'far_lst': far_lst,
                 #               'frr_lst': frr_lst}, results_dct)
 
