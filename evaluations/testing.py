@@ -94,6 +94,14 @@ class Testing:
             pred_labels = np.argmax(prediction_probabilities, axis=1)  # intent predictions
             pred_similarities = np.take_along_axis(prediction_probabilities, np.expand_dims(pred_labels, axis=-1),
                                                    axis=-1).squeeze(axis=-1)
+        elif self.model_type == 'bert':
+            tf_output = self.model.predict([self.X_test['test_ids'], self.X_test['test_attention_masks']])
+            tf_output = tf_output[0]
+            prediction_probabilities = tf.nn.softmax(tf_output, axis=1).numpy()
+
+            pred_labels = np.argmax(prediction_probabilities, axis=1)
+            pred_similarities = np.take_along_axis(prediction_probabilities, np.expand_dims(pred_labels, axis=-1),
+                                                   axis=-1).squeeze(axis=-1)
 
         for pred_label, pred_similarity, true_label in zip(pred_labels, pred_similarities, self.y_test):
 
