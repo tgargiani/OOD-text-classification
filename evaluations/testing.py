@@ -19,9 +19,9 @@ class Testing:
 
     def __init__(self, model, X_test, y_test, model_type: str, oos_label, bin_model=None):
         self.model = model
-        self.X_test = X_test
-        self.y_test = y_test
-        self.oos_label = oos_label
+        self.X_test = X_test  # list or dict with 'test_ids' and 'test_attention_masks' as keys (in case of BERT)
+        self.y_test = y_test  # list
+        self.oos_label = oos_label  # number or string
         self.model_type = model_type
         self.bin_model = bin_model
 
@@ -142,24 +142,50 @@ class Testing:
 
         tp, tn, fp, fn = 0, 0, 0, 0
 
+        if self.model_type == 'bert':
+            # Convert dict to list of tuples. The values in the tuple are linked together.
+            # Each tuple contains test_id at idx 0 and attention mask at idx 1.
+            self.X_test = list(zip(self.X_test['test_ids'], self.X_test['test_attention_masks']))
+
         for message, true_label in zip(self.X_test, self.y_test):
             # 1st step - binary classification
-            bin_pred = self.bin_model.predict(message)
-
-            # unify different outputs of various model.predict() functions
             if self.model_type == 'fasttext':
+                bin_pred = self.bin_model.predict(message)
+
                 bin_pred_label = bin_pred[0][0]
-            else:
+            elif self.model_type in ['svm', 'mlp']:
+                bin_pred = self.bin_model.predict(message)
+
                 bin_pred_label = bin_pred[0]
+            elif self.model_type == 'bert':
+                sent_id = message[0]
+                sent_attention_mask = message[1]
+
+                bin_tf_output = self.bin_model.predict([sent_id, sent_attention_mask])
+                bin_tf_output = bin_tf_output[0]
+                bin_pred_probs = tf.nn.softmax(bin_tf_output, axis=1).numpy()
+
+                bin_pred_label = np.argmax(bin_pred_probs, axis=1)
 
             if bin_pred_label != self.oos_label:
                 # 2nd step - intent classification
-                int_pred = self.model.predict(message)
-
                 if self.model_type == 'fasttext':
+                    int_pred = self.model.predict(message)
+
                     int_pred_label = int_pred[0][0]
-                else:
+                elif self.model_type in ['svm', 'mlp']:
+                    int_pred = self.model.predict(message)
+
                     int_pred_label = int_pred[0]
+                elif self.model_type == 'bert':
+                    sent_id = message[0]
+                    sent_attention_mask = message[1]
+
+                    int_tf_output = self.model.predict([sent_id, sent_attention_mask])
+                    int_tf_output = int_tf_output[0]
+                    int_pred_probs = tf.nn.softmax(int_tf_output, axis=1).numpy()
+
+                    int_pred_label = np.argmax(int_pred_probs, axis=1)
 
                 pred_label = int_pred_label
             else:
