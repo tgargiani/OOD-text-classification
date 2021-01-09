@@ -80,7 +80,7 @@ if __name__ == '__main__':
     repetitions = 30  # number of evaluations when using random selection
     LIMIT_NUM_SENTS = True  # am I limiting the number of sentences of each intent?
 
-    for dataset_size in ['data_full', 'data_small', 'data_imbalanced', 'data_oos_plus']:
+    for dataset_size in ['data_full', 'data_small', 'data_imbalanced']:
         print(f'Testing on: {dataset_size}')
 
         path_intents = os.path.join(DS_INCOMPLETE_PATH, dataset_size + '.json')
