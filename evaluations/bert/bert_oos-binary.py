@@ -6,8 +6,6 @@ from transformers import TFBertForSequenceClassification, BertTokenizer
 import tensorflow as tf
 from numpy import mean
 
-from utils import Split, get_intents_selection, get_filtered_lst, print_results, save_results, DS_INCOMPLETE_PATH
-
 
 def evaluate(binary_dataset, model_int, X_int_test, y_int_test, split):
     # Split and tokenize dataset
