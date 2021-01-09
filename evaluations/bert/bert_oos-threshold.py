@@ -51,11 +51,15 @@ def evaluate(dataset, limit_num_sents: bool):
 
     val_predictions_labels = []  # used to find threshold
 
-    for sent_id, sent_attention_mask, true_int_label in zip(val_ids, val_attention_masks, val_labels):
-        tf_output = model.predict([sent_id, sent_attention_mask])
-        tf_output = tf_output[0]
-        pred_probs = tf.nn.softmax(tf_output, axis=1).numpy()  # intent prediction probabilities
-        pred_label = argmax(pred_probs, axis=1)  # intent prediction
+    for sent, true_int_label in zip(X_val, y_val):
+        predict_input = tokenizer.encode(sent,
+                                         truncation=True,
+                                         padding=True,
+                                         return_tensors="tf")
+
+        tf_output = model.predict(predict_input)[0]
+        pred_probs = tf.nn.softmax(tf_output, axis=1).numpy()[0]  # intent prediction probabilities
+        pred_label = argmax(pred_probs)  # intent prediction
         similarity = pred_probs[pred_label]
 
         pred = (pred_label, similarity)

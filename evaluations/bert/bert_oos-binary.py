@@ -79,7 +79,6 @@ def train_intent_model(int_ds, random_selection: bool, limit_num_sents: bool, nu
 
     train_int_ids, train_int_attention_masks, train_int_labels = tokenize_BERT(X_int_train, y_int_train, tokenizer)
     val_int_ids, val_int_attention_masks, val_int_labels = tokenize_BERT(X_int_val, y_int_val, tokenizer)
-    test_int_ids, test_int_attention_masks, test_int_labels = tokenize_BERT(X_int_test, y_int_test, tokenizer)
 
     num_labels = len(split.intents_dct.keys()) - 1  # minus 1 because 'oos' label isn't used in training
 
@@ -109,8 +108,7 @@ def train_intent_model(int_ds, random_selection: bool, limit_num_sents: bool, nu
                             validation_data=([val_int_ids, val_int_attention_masks], val_int_labels),
                             callbacks=callbacks)
 
-    return model_int, {'test_ids': test_int_ids,
-                       'test_attention_masks': test_int_attention_masks}, test_int_labels, split
+    return model_int, X_int_test, y_int_test, split
 
 
 if __name__ == '__main__':

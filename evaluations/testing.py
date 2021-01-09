@@ -1,5 +1,6 @@
 import numpy as np
 import tensorflow as tf
+from transformers import BertTokenizer
 
 
 # TP = predicted as OOD and true label is OOD
@@ -19,7 +20,7 @@ class Testing:
 
     def __init__(self, model, X_test, y_test, model_type: str, oos_label, bin_model=None):
         self.model = model
-        self.X_test = X_test  # list or dict with 'test_ids' and 'test_attention_masks' as keys (in case of BERT)
+        self.X_test = X_test  # list or dict with 'test_ids' and 'test_attention_masks' as keys (in case of BERT train/threshold)
         self.y_test = y_test  # list
         self.oos_label = oos_label  # number or string
         self.model_type = model_type
@@ -143,11 +144,16 @@ class Testing:
         tp, tn, fp, fn = 0, 0, 0, 0
 
         if self.model_type == 'bert':
-            # Convert dict to list of tuples. The values in the tuple are linked together.
-            # Each tuple contains test_id at idx 0 and attention mask at idx 1.
-            self.X_test = list(zip(self.X_test['test_ids'], self.X_test['test_attention_masks']))
+            # create tokenizer in order to predict single sentences
+            tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 
         for message, true_label in zip(self.X_test, self.y_test):
+            if self.model_type == 'bert':
+                predict_input = tokenizer.encode(message,
+                                                 truncation=True,
+                                                 padding=True,
+                                                 return_tensors="tf")
+
             # 1st step - binary classification
             if self.model_type == 'fasttext':
                 bin_pred = self.bin_model.predict(message)
@@ -158,14 +164,10 @@ class Testing:
 
                 bin_pred_label = bin_pred[0]
             elif self.model_type == 'bert':
-                sent_id = message[0]
-                sent_attention_mask = message[1]
+                bin_tf_output = self.bin_model.predict(predict_input)[0]
+                bin_pred_probs = tf.nn.softmax(bin_tf_output, axis=1).numpy()[0]
 
-                bin_tf_output = self.bin_model.predict([sent_id, sent_attention_mask])
-                bin_tf_output = bin_tf_output[0]
-                bin_pred_probs = tf.nn.softmax(bin_tf_output, axis=1).numpy()
-
-                bin_pred_label = np.argmax(bin_pred_probs, axis=1)
+                bin_pred_label = np.argmax(bin_pred_probs)
 
             if bin_pred_label != self.oos_label:
                 # 2nd step - intent classification
@@ -178,14 +180,10 @@ class Testing:
 
                     int_pred_label = int_pred[0]
                 elif self.model_type == 'bert':
-                    sent_id = message[0]
-                    sent_attention_mask = message[1]
+                    int_tf_output = self.model.predict(predict_input)[0]
+                    int_pred_probs = tf.nn.softmax(int_tf_output, axis=1).numpy()[0]
 
-                    int_tf_output = self.model.predict([sent_id, sent_attention_mask])
-                    int_tf_output = int_tf_output[0]
-                    int_pred_probs = tf.nn.softmax(int_tf_output, axis=1).numpy()
-
-                    int_pred_label = np.argmax(int_pred_probs, axis=1)
+                    int_pred_label = np.argmax(int_pred_probs)
 
                 pred_label = int_pred_label
             else:
