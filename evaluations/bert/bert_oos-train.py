@@ -39,14 +39,14 @@ def evaluate(dataset, limit_num_sents: bool):
 
     loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
     metric = tf.keras.metrics.SparseCategoricalAccuracy('accuracy')
-    optimizer = tf.keras.optimizers.Adam(learning_rate=2e-5)
+    optimizer = tf.keras.optimizers.Adam(learning_rate=4e-5)
 
     model.compile(loss=loss, optimizer=optimizer, metrics=[metric])
 
     history = model.fit([train_ids, train_attention_masks],
                         train_labels,
-                        batch_size=128,
-                        epochs=4,
+                        batch_size=32,
+                        epochs=5,
                         validation_data=([val_ids, val_attention_masks], val_labels),
                         callbacks=callbacks)
 

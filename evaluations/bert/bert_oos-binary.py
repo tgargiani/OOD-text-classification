@@ -33,14 +33,14 @@ def evaluate(binary_dataset, model_int, X_int_test, y_int_test, split):
 
     loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
     metric = tf.keras.metrics.SparseCategoricalAccuracy('accuracy')
-    optimizer = tf.keras.optimizers.Adam(learning_rate=2e-5)
+    optimizer = tf.keras.optimizers.Adam(learning_rate=4e-5)
 
     model_bin.compile(loss=loss, optimizer=optimizer, metrics=[metric])
 
     history = model_bin.fit([train_bin_ids, train_bin_attention_masks],
                             train_bin_labels,
-                            batch_size=128,
-                            epochs=4,
+                            batch_size=32,
+                            epochs=5,
                             validation_data=([val_bin_ids, val_bin_attention_masks], val_bin_labels),
                             callbacks=callbacks)
 
@@ -97,14 +97,14 @@ def train_intent_model(int_ds, random_selection: bool, limit_num_sents: bool, nu
 
     loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
     metric = tf.keras.metrics.SparseCategoricalAccuracy('accuracy')
-    optimizer = tf.keras.optimizers.Adam(learning_rate=2e-5)
+    optimizer = tf.keras.optimizers.Adam(learning_rate=4e-5)
 
     model_int.compile(loss=loss, optimizer=optimizer, metrics=[metric])
 
     history = model_int.fit([train_int_ids, train_int_attention_masks],
                             train_int_labels,
-                            batch_size=128,
-                            epochs=4,
+                            batch_size=32,
+                            epochs=5,
                             validation_data=([val_int_ids, val_int_attention_masks], val_int_labels),
                             callbacks=callbacks)
 
