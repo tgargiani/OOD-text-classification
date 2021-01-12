@@ -299,6 +299,87 @@ def get_X_y_fasttext(lst: list, limit_num_sents: bool, set_type: str):
     return X, y
 
 
+def dataset_2_string_rasa(lst: list, limit_num_sents: bool, set_type: str):
+    """
+    Converts the dataset list into a string that is later converted to file
+    in order to be used by Rasa's train_nlu() method.
+
+    :params:            lst - contains the dataset, list
+                        limit_num_sents - specifies if every intent should have a limited number of sentences, bool
+                        set_type - specifies the type of the received dataset (train, val or test), str
+    :returns:           ds_str, str
+    """
+
+    ds_str = 'version: "2.0"\n\nnlu:\n'
+    old_label = None
+
+    if limit_num_sents:  # these aren't needed normally
+        random.shuffle(lst)
+        lst = sorted(lst, key=lambda x: x[1])  # so that same intents stay close together
+        label_occur_count = {}
+
+    for sent, label in lst:
+        if limit_num_sents:
+            if label not in label_occur_count.keys():
+                label_occur_count[label] = 0
+
+            # limit of occurrence of specific intent:
+            occur_limit = NUM_SENTS[set_type] if label != 'oos' else NUM_SENTS[f'{set_type}_oos']
+
+            if label_occur_count[label] == occur_limit:  # skip sentence and label if reached limit
+                continue
+
+            label_occur_count[label] += 1
+
+        if label != old_label:
+            if old_label != None:
+                ds_str += '\n'
+
+            ds_str += f'- intent: {label}\n  examples: |\n'
+            old_label = label
+
+        ds_str += f'    - {sent}\n'
+
+    return ds_str
+
+
+def get_X_y_rasa(lst: list, limit_num_sents: bool, set_type: str):
+    """
+    Splits the dataset into X and y that are later used in Rasa testing.
+
+    :params:            lst - contains the dataset, list
+                        limit_num_sents - specifies if every intent should have a limited number of sentences, bool
+                        set_type - specifies the type of the received dataset (train, val or test), str
+    :returns:           X - contains sentences, list
+                        y - contains labels, list
+    """
+
+    X, y = [], []
+
+    if limit_num_sents:  # these aren't needed normally
+        random.shuffle(lst)
+        lst = sorted(lst, key=lambda x: x[1])  # so that same intents stay close together - not really needed here
+        label_occur_count = {}
+
+    for sent, label in lst:
+        if limit_num_sents:
+            if label not in label_occur_count.keys():
+                label_occur_count[label] = 0
+
+            # limit of occurrence of specific intent:
+            occur_limit = NUM_SENTS[set_type] if label != 'oos' else NUM_SENTS[f'{set_type}_oos']
+
+            if label_occur_count[label] == occur_limit:  # skip sentence and label if reached limit
+                continue
+
+            label_occur_count[label] += 1
+
+        X.append(sent)
+        y.append(label)
+
+    return X, y
+
+
 def save_results(classifier: str, method: str, dataset_size: str, num_samples: int, repetitions: int,
                  list_results: dict, results: dict):
     """Saves the results of random selection computations into a .txt file."""

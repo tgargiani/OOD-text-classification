@@ -47,6 +47,14 @@ class Testing:
         elif self.model_type == 'bert':
             pred_labels = np.argmax(predictions, axis=1)
 
+        # Rasa can't predict all intents at once
+        if self.model_type == 'rasa':
+            pred_labels = []
+
+            for sent in self.X_test:
+                pred = self.model.parse(sent)
+                pred_labels.append(pred['intent']['name'])
+
         for pred_label, true_label in zip(pred_labels, self.y_test):
 
             # the following set of conditions is the same for all testing methods
@@ -104,6 +112,19 @@ class Testing:
             pred_similarities = np.take_along_axis(prediction_probabilities, np.expand_dims(pred_labels, axis=-1),
                                                    axis=-1).squeeze(axis=-1)
 
+        # Rasa can't predict all intents at once
+        if self.model_type == 'rasa':
+            pred_labels = []
+            pred_similarities = []
+
+            for sent in self.X_test:
+                pred = self.model.parse(sent)
+                pred_label = pred['intent']['name']
+                pred_similarity = pred['intent']['confidence']
+
+                pred_labels.append(pred_label)
+                pred_similarities.append(pred_similarity)
+
         for pred_label, pred_similarity, true_label in zip(pred_labels, pred_similarities, self.y_test):
 
             if pred_similarity < threshold:
@@ -147,20 +168,20 @@ class Testing:
             # create tokenizer in order to predict single sentences
             tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 
-        for message, true_label in zip(self.X_test, self.y_test):
+        for sent, true_label in zip(self.X_test, self.y_test):
             if self.model_type == 'bert':
-                predict_input = tokenizer.encode(message,
+                predict_input = tokenizer.encode(sent,
                                                  truncation=True,
                                                  padding=True,
                                                  return_tensors="tf")
 
             # 1st step - binary classification
             if self.model_type == 'fasttext':
-                bin_pred = self.bin_model.predict(message)
+                bin_pred = self.bin_model.predict(sent)
 
                 bin_pred_label = bin_pred[0][0]
             elif self.model_type in ['svm', 'mlp']:
-                bin_pred = self.bin_model.predict(message)
+                bin_pred = self.bin_model.predict(sent)
 
                 bin_pred_label = bin_pred[0]
             elif self.model_type == 'bert':
@@ -168,15 +189,19 @@ class Testing:
                 bin_pred_probs = tf.nn.softmax(bin_tf_output, axis=1).numpy()[0]
 
                 bin_pred_label = np.argmax(bin_pred_probs)
+            elif self.model_type == 'rasa':
+                bin_pred = self.bin_model.parse(sent)
+
+                bin_pred_label = bin_pred['intent']['name']
 
             if bin_pred_label != self.oos_label:
                 # 2nd step - intent classification
                 if self.model_type == 'fasttext':
-                    int_pred = self.model.predict(message)
+                    int_pred = self.model.predict(sent)
 
                     int_pred_label = int_pred[0][0]
                 elif self.model_type in ['svm', 'mlp']:
-                    int_pred = self.model.predict(message)
+                    int_pred = self.model.predict(sent)
 
                     int_pred_label = int_pred[0]
                 elif self.model_type == 'bert':
@@ -184,6 +209,10 @@ class Testing:
                     int_pred_probs = tf.nn.softmax(int_tf_output, axis=1).numpy()[0]
 
                     int_pred_label = np.argmax(int_pred_probs)
+                elif self.model_type == 'rasa':
+                    int_pred = self.model.parse(sent)
+                    
+                    int_pred_label = int_pred['intent']['name']
 
                 pred_label = int_pred_label
             else:
