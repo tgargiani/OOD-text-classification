@@ -7,13 +7,14 @@ import tensorflow as tf
 from numpy import mean
 
 
-def evaluate(binary_dataset, model_int, X_int_test, y_int_test, split):
+def evaluate(binary_dataset, model_int, X_int_test, y_int_test, split_int):
     # Split and tokenize dataset
+    split_bin = Split_BERT()  # we have to create a new split because the labels of BERT have to be between [0, num_labels - 1]
     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 
-    X_bin_train, y_bin_train = split.get_X_y(binary_dataset['train'], limit_num_sents=False,
-                                             set_type='train')
-    X_bin_val, y_bin_val = split.get_X_y(binary_dataset['val'], limit_num_sents=False, set_type='val')
+    X_bin_train, y_bin_train = split_bin.get_X_y(binary_dataset['train'], limit_num_sents=False,
+                                                 set_type='train')
+    X_bin_val, y_bin_val = split_bin.get_X_y(binary_dataset['val'], limit_num_sents=False, set_type='val')
 
     train_bin_ids, train_bin_attention_masks, train_bin_labels = tokenize_BERT(X_bin_train, y_bin_train, tokenizer)
     val_bin_ids, val_bin_attention_masks, val_bin_labels = tokenize_BERT(X_bin_val, y_bin_val, tokenizer)
@@ -45,7 +46,8 @@ def evaluate(binary_dataset, model_int, X_int_test, y_int_test, split):
                             callbacks=callbacks)
 
     # Test
-    testing = Testing(model_int, X_int_test, y_int_test, 'bert', split.intents_dct['oos'], bin_model=model_bin)
+    testing = Testing(model_int, X_int_test, y_int_test, 'bert', split_int.intents_dct['oos'], bin_model=model_bin,
+                      bin_oos_label=split_bin.intents_dct['oos'])
     results_dct = testing.test_binary()
 
     return results_dct
@@ -132,9 +134,9 @@ if __name__ == '__main__':
             bin_ds = json.load(f)
 
         if not RANDOM_SELECTION:
-            model_int, X_int_test, y_int_test, split = train_intent_model(int_ds, RANDOM_SELECTION, LIMIT_NUM_SENTS)
+            model_int, X_int_test, y_int_test, split_int = train_intent_model(int_ds, RANDOM_SELECTION, LIMIT_NUM_SENTS)
 
-            results_dct = evaluate(bin_ds, model_int, X_int_test, y_int_test, split)
+            results_dct = evaluate(bin_ds, model_int, X_int_test, y_int_test, split_int)
 
             print_results(dataset_size, results_dct)
         else:
@@ -145,10 +147,10 @@ if __name__ == '__main__':
                 far_lst, frr_lst = [], []
 
                 for i in range(repetitions):
-                    model_int, X_int_test, y_int_test, split = train_intent_model(int_ds, RANDOM_SELECTION,
-                                                                                  LIMIT_NUM_SENTS, num_samples)
+                    model_int, X_int_test, y_int_test, split_int = train_intent_model(int_ds, RANDOM_SELECTION,
+                                                                                      LIMIT_NUM_SENTS, num_samples)
 
-                    temp_res = evaluate(bin_ds, model_int, X_int_test, y_int_test, split)  # temporary results
+                    temp_res = evaluate(bin_ds, model_int, X_int_test, y_int_test, split_int)  # temporary results
 
                     accuracy_lst.append(temp_res['accuracy'])
                     recall_lst.append(temp_res['recall'])

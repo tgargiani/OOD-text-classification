@@ -18,13 +18,14 @@ from transformers import BertTokenizer
 class Testing:
     """Used to test the results of classification."""
 
-    def __init__(self, model, X_test, y_test, model_type: str, oos_label, bin_model=None):
+    def __init__(self, model, X_test, y_test, model_type: str, oos_label, bin_model=None, bin_oos_label=None):
         self.model = model
         self.X_test = X_test  # list or dict with 'test_ids' and 'test_attention_masks' as keys (in case of BERT train/threshold)
         self.y_test = y_test  # list
         self.oos_label = oos_label  # number or string
         self.model_type = model_type
         self.bin_model = bin_model
+        self.bin_oos_label = bin_oos_label  # BERT needs a different 'oos' label in binary approach
 
     def test_train(self):
         accuracy_correct, accuracy_out_of = 0, 0
@@ -194,7 +195,7 @@ class Testing:
 
                 bin_pred_label = bin_pred['intent']['name']
 
-            if bin_pred_label != self.oos_label:
+            if bin_pred_label != self.oos_label or bin_pred_label != self.bin_oos_label:
                 # 2nd step - intent classification
                 if self.model_type == 'fasttext':
                     int_pred = self.model.predict(sent)
@@ -211,12 +212,12 @@ class Testing:
                     int_pred_label = np.argmax(int_pred_probs)
                 elif self.model_type == 'rasa':
                     int_pred = self.model.parse(sent)
-                    
+
                     int_pred_label = int_pred['intent']['name']
 
                 pred_label = int_pred_label
             else:
-                pred_label = bin_pred_label
+                pred_label = self.oos_label
 
             # the following set of conditions is the same for all testing methods
             if true_label != self.oos_label:
