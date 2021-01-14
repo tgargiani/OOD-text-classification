@@ -190,12 +190,15 @@ class Testing:
                 bin_pred_probs = tf.nn.softmax(bin_tf_output, axis=1).numpy()[0]
 
                 bin_pred_label = np.argmax(bin_pred_probs)
+
+                if bin_pred_label == self.bin_oos_label:
+                    bin_pred_label = self.oos_label
             elif self.model_type == 'rasa':
                 bin_pred = self.bin_model.parse(sent)
 
                 bin_pred_label = bin_pred['intent']['name']
 
-            if bin_pred_label != self.oos_label or bin_pred_label != self.bin_oos_label:
+            if bin_pred_label != self.oos_label:
                 # 2nd step - intent classification
                 if self.model_type == 'fasttext':
                     int_pred = self.model.predict(sent)
